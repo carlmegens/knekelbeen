@@ -1,0 +1,11 @@
+# name | text | style (acting direction)   -> tools/gemini_clip.py --batch clips/lines.txt --upload
+welkom   | Welkom, kleintjes... <short pause> Kom maar dichterbij. Ik bijt niet. <long pause> Niet meer. | langzaam, fluisterend en geheimzinnig
+snoep    | Pak één snoepje. ÉÉN! <short pause> Ik hou je in de gaten... | eerst vriendelijk, dan ineens streng
+kostuum  | Ooh, wat een eng kostuum! <short pause> Ik schrok me bijna dood. <long pause> Oh wacht... dat ben ik al. | verbaasd, daarna droog en grappig
+lach     | Mwoehahaha! <short pause> Fijne Halloween! | griezelig, galmend lachend
+klok     | Hoor je dat tikken? <long pause> Tik... tak... <short pause> Dat is jouw tijd die wegtikt... | heel zacht en dreigend
+honderd  | Ik zit hier al honderd jaar opgesloten in deze klok. <sigh> En niemand brengt mij ooit eens een snoepje. | zielig en dramatisch
+durf     | Wie durft er dichterbij te komen? <short pause> Jij? <short pause> Of ben je soms... bang? | uitdagend en geheimzinnig
+dag      | Ga maar gauw verder, kleine monsters. <short pause> Er wachten nog meer huizen op jullie! | hartelijk en ondeugend
+botlied_zang | Het teenbot zit vast aan het voetbot, het voetbot zit vast aan het enkelbot, het enkelbot zit vast aan het scheenbot, het scheenbot zit vast aan het kniebot! <short pause> Rammel, rammel, hoor die botten, klapper, klapper, kaak en knoken! | vrolijk en ritmisch zingend, als een griezelig kinderliedje
+botlied_einde | Maar wacht eens even... <long pause> Ik heb alleen nog maar een schedel! <sigh> Waar is de rest van mij gebleven?! <short pause> Mwoehahaha! | eerst verbaasd, dan dramatisch geschrokken, eindigend met een griezelige lach

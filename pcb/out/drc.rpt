@@ -1,0 +1,50 @@
+** Drc report for skull.kicad_pcb **
+** Created on 2026-10-11T20:19:06 **
+** Report includes: Errors, Warnings, Exclusions **
+
+** Found 8 DRC violations **
+[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; 3 spokes connected to isolated island)
+    Local override; error
+    @(50.5000 mm, 38.5000 mm): Zone [GND] on B.Cu, priority 0
+    @(99.5000 mm, 83.5000 mm): PTH pad 2 [GND] of C4
+[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; 2 spokes connected to isolated island)
+    Local override; error
+    @(50.5000 mm, 38.5000 mm): Zone [GND] on B.Cu, priority 0
+    @(80.3200 mm, 54.0000 mm): PTH pad 9 [GND] of J13
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; warning
+    @(50.0000 mm, 131.0000 mm): Segment on Edge.Cuts
+    @(50.6800 mm, 113.1000 mm): Polygon of J9 on F.Silkscreen
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; warning
+    @(50.0000 mm, 131.0000 mm): Segment on Edge.Cuts
+    @(50.6800 mm, 61.3000 mm): Polygon of J6 on F.Silkscreen
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; warning
+    @(50.0000 mm, 131.0000 mm): Segment on Edge.Cuts
+    @(50.6800 mm, 97.0000 mm): Polygon of J8 on F.Silkscreen
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; warning
+    @(50.0000 mm, 131.0000 mm): Segment on Edge.Cuts
+    @(50.6800 mm, 84.4000 mm): Polygon of J7 on F.Silkscreen
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; warning
+    @(147.0000 mm, 134.0000 mm): Segment on Edge.Cuts
+    @(65.9000 mm, 134.3000 mm): Segment of J2 on F.Silkscreen
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; warning
+    @(147.0000 mm, 134.0000 mm): Segment on Edge.Cuts
+    @(75.1000 mm, 125.5000 mm): Segment of J2 on F.Silkscreen
+
+** Found 0 unconnected pads **
+
+** Found 0 Footprint errors **
+
+** Ignored checks **
+    - Footprint has no courtyard defined
+    - Track endpoint not centered on via
+    - Tuning profile track geometries
+    - Footprint doesn't match symbol's footprint filters
+    - Footprint component type doesn't match footprint pads
+
+** End of Report **

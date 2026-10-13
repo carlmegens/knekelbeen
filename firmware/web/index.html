@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pratende Schedel</title>
+<style>
+ :root{--bg:#111;--panel:#1a1a1a;--fg:#eee;--muted:#aaa;--line:#444;--accent:#f80;--on-accent:#111;
+  --neutral:#3a3a3a;--danger:#a33;--err:#ff7b7b;--playing:#2a1a00;color-scheme:dark;accent-color:var(--accent)}
+ body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--fg);max-width:520px;margin:0 auto;padding:16px;line-height:1.4}
+ h1{color:var(--accent);margin:.2em 0 .4em;font-size:1.8em}
+ section,details{border:1px solid var(--line);border-radius:10px;margin:1em 0;padding:.4em 1em 1em;background:var(--panel)}
+ h2,summary{font-size:1.1em;margin:.6em 0}
+ summary{cursor:pointer;font-weight:600;padding:.4em 0;min-height:32px}
+ details h3{font-size:1em;margin:1.2em 0 .3em;color:var(--accent)}
+ button{font:inherit;min-height:44px;padding:.5em 1em;margin:.25em .3em .25em 0;border:0;border-radius:8px;background:var(--accent);color:var(--on-accent);cursor:pointer}
+ button:disabled{opacity:.4;cursor:default}
+ button.primary{width:100%;font-size:1.5em;min-height:64px;margin:0}
+ button.neutral{background:var(--neutral);color:var(--fg)}
+ button.danger{background:var(--danger);color:#fff}
+ button.sm{padding:.4em .9em}
+ input[type=number],input[type=text]{font:inherit;width:5em;padding:.45em;background:#222;color:var(--fg);border:1px solid var(--line);border-radius:6px}
+ input[type=range]{width:100%;min-height:32px}
+ input[type=color]{width:3em;height:44px;padding:0;border:1px solid var(--line);border-radius:6px;background:#222}
+ select{font:inherit;padding:.45em;background:#222;color:var(--fg);border:1px solid var(--line);border-radius:6px;min-height:44px}
+ label{display:block;margin:.6em 0}
+ .help{display:block;color:var(--muted);font-size:.9em}
+ #status{margin:.6em 0;color:var(--muted)} #status.err{color:var(--err)}
+ #now{color:var(--accent);margin:.6em 0;font-weight:600}
+ #now:empty,#status:empty{display:none}
+ .clip{display:flex;align-items:center;gap:.3em;padding:.15em .4em;border-radius:6px;border-left:3px solid transparent}
+ .clip.playing{background:var(--playing);border-left-color:var(--accent)}
+ .clip span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .clip .danger{margin-left:1em}
+ .row{display:flex;align-items:center;gap:.5em;flex-wrap:wrap}
+ .ends{display:flex;justify-content:space-between;color:var(--muted);font-size:.9em}
+ .pill{display:inline-block;margin:.6em 0;padding:.3em .8em;border-radius:999px;background:var(--neutral);font-weight:600}
+ .saved{color:var(--accent);margin-left:.4em}
+ dialog{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;max-width:340px}
+ dialog::backdrop{background:#000a}
+ dialog h2{margin-top:0}
+</style></head><body>
+<h1>&#128128; Pratende Schedel</h1>
+<button id="speak" class="primary">&#128123; Spreek</button>
+<div id="now"></div>
+<section id="aiBox" hidden><h2>AI-schedel</h2>
+ <button id="aiBtn" class="primary">&#129302; AI-schedel starten</button>
+ <div><span id="aiState" class="pill">Uit</span></div>
+ <div id="aiLast" class="help"></div>
+ <span class="help">Luistert via de microfoon van de laptop. De laptop-app moet aan staan.</span>
+</section>
+<div id="status" role="status"></div>
+
+<section><h2>Clips</h2>
+ <div id="clips"></div>
+ <label>Volume <span id="volv"></span>
+  <input id="vol" type="range" min="0" max="100" aria-label="Volume"></label>
+ <div class="row">
+  <button class="sm" onclick="$('file').click()">WAV-bestand uploaden</button>
+  <span id="free" class="help"></span>
+ </div>
+ <input id="file" type="file" accept=".wav,audio/wav" multiple hidden>
+</section>
+
+<details id="setup"><summary>&#9881; Instellingen</summary>
+ <h3>Kaaksynchronisatie</h3>
+ <label>Ruisdrempel <input id="gate" type="number">
+  <span class="help">Hoger negeert zachte geluiden en achtergrondruis.</span></label>
+ <label>Gevoeligheid (%) <input id="sens" type="number">
+  <span class="help">Lager laat de kaak verder opengaan.</span></label>
+ <label>Kaak-voorsprong (ms) <input id="lead" type="number">
+  <span class="help">Beweegt de kaak net vóór het geluid, om de vertraging van de servo op te vangen.</span></label>
+ <div class="row"><button class="sm" onclick="saveSync(this)">Opslaan</button>
+  <button class="sm neutral" onclick="api('tone')">Testtoon</button></div>
+
+ <h3>Kaakpositie</h3>
+ <label>Kaak <span id="posv">0</span>% open
+  <input id="pos" type="range" min="0" max="100" value="0" aria-label="Kaakpositie"></label>
+ <div class="row"><button class="sm neutral" onclick="setPos(0)">Dicht</button>
+  <button class="sm neutral" onclick="setPos(100)">Open</button>
+  <button class="sm neutral" onclick="api('chatter?ms=3000')">Klapperen (3 s)</button></div>
+
+ <h3>Ogen</h3>
+ <div class="row"><label style="margin:0">Kleur <input id="eyeColor" type="color" value="#ff2000" aria-label="Kleur van de ogen"></label>
+  <select id="eyeMode" aria-label="Werking van de ogen">
+   <option value="0">Automatisch</option><option value="1">Altijd aan</option><option value="2">Uit</option></select></div>
+ <label>Helderheid <span id="eyeBv"></span>
+  <input id="eyeB" type="range" min="0" max="100" aria-label="Helderheid van de ogen"></label>
+ <span class="help">Automatisch: de ogen gloeien zacht en lichten op met elke lettergreep.</span>
+ <div class="row"><button class="sm" onclick="saveEyes(this)">Opslaan</button>
+  <button class="sm neutral" onclick="api('eyes?flash=1')">Flits</button></div>
+
+ <h3>Kaarsen</h3>
+ <div class="row"><label style="margin:0">Aantal <input id="cCount" type="number" min="1" max="20"></label>
+  <label style="margin:0">Kleurvolgorde <select id="cOrder" aria-label="Kleurvolgorde">
+   <option>RGB</option><option>RBG</option><option>GRB</option><option>GBR</option><option>BRG</option><option>BGR</option></select></label></div>
+ <div class="row"><select id="cMode" aria-label="Werking van de kaarsen">
+   <option value="0">Flakkeren</option><option value="1">Altijd aan</option><option value="2">Uit</option></select></div>
+ <label>Helderheid <span id="cBv"></span>
+  <input id="cB" type="range" min="0" max="100" aria-label="Helderheid van de kaarsen"></label>
+ <label><input id="cVoice" type="checkbox"> Reageren op stem
+  <span class="help">Aan: de vlammen laaien op en flakkeren wilder als de schedel praat.</span></label>
+ <label>Flakkersnelheid <span id="cSv"></span>
+  <input id="cS" type="range" min="20" max="300" step="5" aria-label="Flakkersnelheid">
+  <span class="ends"><span>Rustig</span><span>Onrustig</span></span></label>
+ <span class="help">Kloppen de kleuren niet (blauw of groen in plaats van oranje)? Probeer een andere kleurvolgorde. Met Test gaan de kaarsen één voor één aan.</span>
+ <div class="row"><button class="sm" onclick="saveCandles(this)">Opslaan</button>
+  <button class="sm neutral" onclick="api('candles?effect=test')">Test</button></div>
+ <div class="row"><button class="sm neutral" onclick="api('candles?effect=out')">Uitblazen</button>
+  <button class="sm neutral" onclick="api('candles?effect=flare')">Opflakkeren</button>
+  <button class="sm neutral" onclick="api('candles?effect=ghost')">Spookgroen</button></div>
+
+ <h3>Servohoeken</h3>
+ <div class="row"><label style="margin:0">Dicht <input id="c" type="number" min="0" max="180"></label>
+  <button class="sm neutral" onclick="api('raw?deg='+$('c').value)">Test</button></div>
+ <div class="row"><label style="margin:0">Open <input id="o" type="number" min="0" max="180"></label>
+  <button class="sm neutral" onclick="api('raw?deg='+$('o').value)">Test</button></div>
+ <span class="help">Tik op Test om de servo naar die hoek te bewegen. Zoek waar de kaak net dicht is en waar hij helemaal open is, en sla op.</span>
+ <button class="sm" onclick="saveCal(this)">Opslaan</button>
+</details>
+
+<dialog id="dlg"><h2 id="dlgT"></h2><p id="dlgB"></p>
+ <div class="row"><button id="dlgOk" class="danger"></button><button id="dlgNo" class="neutral"></button></div></dialog>
+
+<script>
+const B='';  // API base
+const $=id=>document.getElementById(id);
+const MSG={
+ offline:'Kan de schedel niet bereiken. Check of hij aan staat en verbonden is met wifi.',
+ noclips:'Nog niets te zeggen. Voeg eerst een clip toe.',
+ empty:'Nog geen clips. Neem er een op met de laptop-app of upload een WAV-bestand om de schedel te laten praten.',
+ full:'Uploaden mislukt: de opslag van de schedel is misschien vol. Verwijder een clip en probeer opnieuw.',
+ badwav:'Dit bestand kan niet worden afgespeeld. Gebruik een 16-bit WAV, of upload via de laptop-app, die het automatisch omzet.'};
+let clipNames=[],playing=false,offline=false;
+
+function say(t,err){const s=$('status');s.textContent=t||'';s.className=err?'err':''}
+async function api(p,opt){
+ try{const r=await fetch(B+p,opt);if(offline){offline=false;say('')}return r}
+ catch(e){offline=true;say(MSG.offline,true);throw e}}
+const pretty=n=>n.replace(/\.wav$/i,'').replace(/_/g,' ');
+function flash(btn){const s=document.createElement('span');s.className='saved';s.textContent='Opgeslagen';
+ btn.after(s);setTimeout(()=>s.remove(),2000)}
+function ask(title,body,ok,no){return new Promise(res=>{const d=$('dlg');
+ $('dlgT').textContent=title;$('dlgB').textContent=body;$('dlgOk').textContent=ok;$('dlgNo').textContent=no;
+ $('dlgOk').onclick=()=>{d.close();res(true)};$('dlgNo').onclick=()=>{d.close();res(false)};d.showModal()})}
+
+// ---- speak / now playing ----
+$('speak').onclick=async()=>{
+ if(playing){await api('stop');return}
+ const r=await api('random');say(r.status==404?MSG.noclips:'',r.status==404);poll()};
+async function poll(){
+ try{const j=await (await api('status')).json();playing=j.playing;
+  $('speak').innerHTML=playing?'&#9632; Stop':'&#128123; Spreek';
+  $('now').textContent=j.live?'Live: iemand praat via de schedel':playing&&j.clip?'Speelt nu: '+pretty(j.clip):'';
+  document.querySelectorAll('.clip').forEach(d=>d.classList.toggle('playing',playing&&d.dataset.name==j.clip));
+ }catch(e){}}
+setInterval(poll,1000);
+
+// ---- AI skull (runs in the laptop app, which announces itself to us) ----
+const AI_STATE={off:'Uit',connecting:'🔌 Verbinden…',listening:'👂 Luistert…',hearing:'🗣 Hoort iemand…',
+ thinking:'💭 Denkt na…',speaking:'💀 Spreekt…'};
+let brain='',aiRunning=false;
+async function aiPoll(){
+ try{const st=await (await fetch(B+'status')).json();brain=st.brain||''}catch(e){}
+ $('aiBox').hidden=!brain;if(!brain)return;
+ try{const j=await (await fetch(brain+'/api/ai/headless')).json();aiRunning=j.running;
+  $('aiState').textContent=AI_STATE[j.state]||j.state;
+  $('aiBtn').innerHTML=aiRunning?'&#9632; AI-schedel stoppen':'&#129302; AI-schedel starten';
+  $('aiBtn').classList.toggle('danger',aiRunning);
+  const last=[...j.log].reverse().find(m=>m.type==='said'||m.type==='heard'||m.type==='error');
+  $('aiLast').textContent=last?(last.type==='heard'?'Kind: ':last.type==='said'?'Schedel: ':'')+last.text:'';
+ }catch(e){$('aiState').textContent='Laptop-app niet bereikbaar'}}
+$('aiBtn').onclick=async()=>{
+ try{const r=await fetch(brain+'/api/ai/headless/'+(aiRunning?'stop':'start'));
+  if(!r.ok){const j=await r.json();say(j.error||'Starten mislukt',true)}}
+ catch(e){say('Kan de laptop-app niet bereiken. Staat hij aan, en is poort 8000 open in de firewall?',true)}
+ aiPoll()};
+setInterval(aiPoll,2000);aiPoll();
+
+// ---- clips ----
+async function loadClips(){
+ let j;try{j=await (await api('clips')).json()}catch(e){return}
+ clipNames=j.clips.map(c=>c.name);const box=$('clips');box.innerHTML='';
+ if(!j.clips.length){const p=document.createElement('p');p.className='help';p.textContent=MSG.empty;box.append(p)}
+ for(const c of j.clips){
+  const d=document.createElement('div');d.className='clip';d.dataset.name=c.name;
+  const n=document.createElement('span');n.textContent=pretty(c.name);
+  const p=document.createElement('button');p.className='sm';p.textContent='Speel';
+  p.setAttribute('aria-label','Speel '+pretty(c.name));
+  p.onclick=async()=>{await api('play?f='+encodeURIComponent(c.name));poll()};
+  const x=document.createElement('button');x.className='sm danger';x.textContent='✕';
+  x.setAttribute('aria-label','Verwijder '+pretty(c.name));
+  x.onclick=async()=>{if(await ask('“'+pretty(c.name)+'” verwijderen?',
+    'De clip wordt van de schedel verwijderd. Dit kun je niet ongedaan maken.','Clip verwijderen','Behouden')){
+    await api('delete?f='+encodeURIComponent(c.name));loadClips()}};
+  d.append(n,p,x);box.append(d)}
+ if($('free'))$('free').textContent=(j.free/1048576).toFixed(1).replace('.',',')+' MB vrij';
+ poll()}
+
+// ---- upload (skull page only) ----
+$('file').onchange=async()=>{
+ const files=[...$('file').files];$('file').value='';
+ for(let i=0;i<files.length;i++){
+  let name=files[i].name.replace(/[^A-Za-z0-9_.-]+/g,'_');
+  if(!/\.wav$/i.test(name))name+='.wav';
+  if(clipNames.includes(name)&&!await ask('“'+pretty(name)+'” vervangen?',
+     'Er bestaat al een clip met deze naam.','Vervangen','Andere naam')){
+   const n=prompt('Nieuwe naam voor de clip:',pretty(name)+' 2');if(!n)continue;
+   name=n.trim().replace(/[^A-Za-z0-9_-]+/g,'_')+'.wav'}
+  say('Uploaden '+(i+1)+' van '+files.length+'…');
+  const fd=new FormData();fd.append('f',files[i],name);
+  let r;try{r=await api('upload',{method:'POST',body:fd})}catch(e){return}
+  if(r.status==415){say(MSG.badwav,true);continue}
+  if(!r.ok){say(MSG.full,true);continue}
+  say('Geüpload: '+pretty(name))}
+ loadClips()};
+
+// ---- settings ----
+$('vol').oninput=()=>$('volv').textContent=$('vol').value+'%';
+$('vol').onchange=()=>api('volume?v='+$('vol').value);
+let posBusy=false,posNext=null;
+async function sendPos(v){if(posBusy){posNext=v;return}posBusy=true;
+ try{await api('jaw?pos='+v)}catch(e){}posBusy=false;if(posNext!==null){const n=posNext;posNext=null;sendPos(n)}}
+function setPos(v){$('pos').value=v;$('posv').textContent=v;sendPos(v)}
+$('pos').oninput=()=>setPos($('pos').value);
+async function saveSync(btn){await api('sync?gate='+$('gate').value+'&sens='+$('sens').value+'&lead='+$('lead').value);flash(btn)}
+const eyeQ=()=>'eyes?color='+$('eyeColor').value.slice(1)+'&bright='+$('eyeB').value+'&mode='+$('eyeMode').value;
+async function saveEyes(btn){await api(eyeQ());flash(btn)}
+$('eyeB').oninput=()=>$('eyeBv').textContent=$('eyeB').value+'%';
+api('eyes').then(r=>r.json()).then(j=>{$('eyeColor').value='#'+j.color.toLowerCase();$('eyeB').value=j.bright;
+ $('eyeBv').textContent=j.bright+'%';$('eyeMode').value=j.mode}).catch(()=>{});
+const candleQ=()=>'candles?count='+$('cCount').value+'&order='+$('cOrder').value+'&bright='+$('cB').value+'&mode='+$('cMode').value;
+async function saveCandles(btn){await api(candleQ());flash(btn)}
+$('cB').oninput=()=>$('cBv').textContent=$('cB').value+'%';
+let cSBusy=false,cSNext=null;
+async function sendSpeed(v){if(cSBusy){cSNext=v;return}cSBusy=true;
+ try{await api('candles?speed='+v)}catch(e){}cSBusy=false;if(cSNext!==null){const n=cSNext;cSNext=null;sendSpeed(n)}}
+$('cS').oninput=()=>{$('cSv').textContent=$('cS').value+'%';sendSpeed($('cS').value)};
+$('cVoice').onchange=()=>api('candles?voice='+($('cVoice').checked?1:0));
+api('candles').then(r=>r.json()).then(j=>{$('cCount').value=j.count;$('cOrder').value=j.order;
+ $('cB').value=j.bright;$('cBv').textContent=j.bright+'%';$('cMode').value=j.mode;
+ $('cS').value=j.speed;$('cSv').textContent=j.speed+'%';$('cVoice').checked=j.voice}).catch(()=>{});
+async function saveCal(btn){await api('cal?closed='+$('c').value+'&open='+$('o').value);flash(btn)}
+try{$('setup').open=localStorage.getItem('setup')==='1'}catch(e){}
+$('setup').ontoggle=()=>{try{localStorage.setItem('setup',$('setup').open?'1':'0')}catch(e){}};
+
+api('cal').then(r=>r.json()).then(j=>{$('c').value=j.closed;$('o').value=j.open}).catch(()=>{});
+api('sync').then(r=>r.json()).then(j=>{$('gate').value=j.gate;$('sens').value=j.sens;$('lead').value=j.lead;
+ $('vol').value=j.vol;$('volv').textContent=j.vol+'%'}).catch(()=>{});
+loadClips();
+</script></body></html>

@@ -1,0 +1,9 @@
+.venv/
+.env
+clips/raw/
+__pycache__/
+firmware/.pio/
+firmware/include/secrets.h
+brain/ai_settings.json
+voices/*.onnx
+clips/opname*.wav
