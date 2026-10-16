@@ -28,8 +28,9 @@ kicad-cli pcb drc -o out/drc.rpt skull.kicad_pcb
 
 ## Parts list
 
-Checked against TinyTronics on 2026-10-11 (product codes in brackets; check
-stock before ordering). TinyTronics has no 3.5 mm pitch screw terminals, so
+Checked against TinyTronics on 2026-10-13 (product codes in brackets; check
+stock before ordering). `tools/tinytronics-cart.js` adds all TinyTronics parts
+to your cart in one go. TinyTronics has no 3.5 mm pitch screw terminals, so
 those come from Domoticx (KF350, €0.27 each) or Kiwi Electronics.
 
 | Ref | Part | Qty | Where | Notes |
@@ -45,14 +46,14 @@ those come from Domoticx (KF350, €0.27 each) or Kiwi Electronics.
 | J10–J13 | Male pin header 1×40, 2.54 mm | 1 | TinyTronics | cut to 3, 3, 3, 9 pins |
 | — | microSD module with level shifter | 1 | TinyTronics (000375) | runs on 5 V |
 | J14 | Female header 1×6, 2.54 mm, **right-angle** | 1 | Domoticx (CON-2329-P16FH, "horizontaal") | TinyTronics only has straight ones |
-| F1 | PTC fuse 5 A, through-hole | 1 | TinyTronics (PPTC5000MATH) | no 4 A available; 5 A is fine |
+| F1 | PTC fuse 5 A, through-hole | 1 | TinyTronics (PPTC5000MATH) | no 4 A available; 5 A is fine. Its legs are ~10 mm apart: bend them in to the 5.1 mm footprint, and keep the body off neighbouring parts (it gets hot when tripped) |
 | D1 | 1N5822 Schottky | 1 | TinyTronics (1N5822) | stripe = K |
 | D2 | 1N5817 or **1N5819** Schottky | 1 | TinyTronics diode set (DIODESET, has 10× 1N5819) | stripe = K |
-| C1 | 1000 µF 25 V, Ø10 mm, 5 mm pitch | 1 | TinyTronics (AISHI 1000uF 25V) | mind the polarity |
-| C3, C4 | 470 µF 25 V, Ø8 mm, 3.5 mm pitch | 2 | TinyTronics (AISHI 470uF 25V) | mind the polarity |
+| C1 | 1000 µF 25 V, Ø10 mm, 5 mm pitch | 1 | TinyTronics (AISHI 1000uF 25V - 5 pieces, 008079) | mind the polarity |
+| C3, C4 | 470 µF 25 V, Ø8 mm, 3.5 mm pitch | 2 | TinyTronics (AISHI 470uF 25V - 5 pieces, 008081) | mind the polarity |
 | C2 | Ceramic capacitor 100 nF | 1 | TinyTronics | 5 mm holes; bend the legs if it has 2.54 mm pitch |
-| R1 | Resistor 1 kΩ | 1 | TinyTronics (10-pack) | |
-| R2–R5 | Resistor 330 Ω | 4 | TinyTronics (10-pack) | |
+| R1 | Resistor 1 kΩ | 1 | TinyTronics (1kΩ 1/4W - 10 pieces, 007621) | |
+| R2–R5 | Resistor 330 Ω | 4 | TinyTronics (330Ω 1/4W - 10 pieces, 007619) | |
 | LED1 | LED 3 mm green | 1 | TinyTronics | long leg = + (round pad) |
 | H1–H4 | M3 spacers + screws | 4 | TinyTronics (M3 spacer kit or 10 mm spacers) | |
 | J2 | DC barrel jack, PCB | 1 | skip it | TinyTronics' jacks don't match this footprint; use 5V IN |
