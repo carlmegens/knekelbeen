@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <ArduinoOTA.h>
-#include <LittleFS.h>
 #include <ESPmDNS.h>
 #include <WebServer.h>
 #include <WiFi.h>
@@ -11,6 +10,7 @@
 #include "eyes.h"
 #include "mic.h"
 #include "jaw.h"
+#include "storage.h"
 
 #if __has_include("secrets.h")
 #include "secrets.h"
@@ -141,21 +141,21 @@ static void setupServer() {
 
   server.on("/clips", [] {
     String json = "{\"clips\":[";
-    File dir = LittleFS.open("/clips");
+    File dir = storage::clips().open("/clips");
     bool first = true;
     for (File f = dir.openNextFile(); f; f = dir.openNextFile()) {
       if (!first) json += ',';
       first = false;
       json += String("{\"name\":\"") + f.name() + "\",\"size\":" + f.size() + "}";
     }
-    json += String("],\"free\":") + (LittleFS.totalBytes() - LittleFS.usedBytes()) + "}";
+    json += "]," + storage::json() + "}";
     server.send(200, "application/json", json);
   });
 
   server.on("/delete", [] {
     String name = server.arg("f");
     bool ok = name.length() && name.indexOf('/') < 0 &&
-              LittleFS.remove("/clips/" + name);
+              storage::clips().remove("/clips/" + name);
     server.send(ok ? 200 : 404, "text/plain", ok ? "ok" : "not found");
   });
 
@@ -169,10 +169,10 @@ static void setupServer() {
       [] {
         if (uploadFile) uploadFile.close();  // make sure it can be removed
         if (uploadFull) {
-          LittleFS.remove(uploadPath);
+          storage::clips().remove(uploadPath);
           server.send(507, "text/plain", "storage full");
         } else if (!audio::isValidWav(uploadPath)) {
-          LittleFS.remove(uploadPath);
+          storage::clips().remove(uploadPath);
           server.send(415, "text/plain", "not a 16-bit PCM WAV");
         } else {
           server.send(200, "text/plain", "ok");
@@ -185,7 +185,7 @@ static void setupServer() {
           name = name.substring(name.lastIndexOf('/') + 1);
           uploadPath = "/clips/" + name;
           uploadFull = false;
-          uploadFile = LittleFS.open(uploadPath, "w");
+          uploadFile = storage::clips().open(uploadPath, "w");
           if (!uploadFile) uploadFull = true;
           Serial.printf("Upload %s\n", name.c_str());
         } else if (up.status == UPLOAD_FILE_WRITE && uploadFile) {
@@ -250,7 +250,8 @@ static void setupServer() {
                 String("{\"playing\":") + (audio::isPlaying() ? "true" : "false") +
                     ",\"live\":" + (audio::isLive() ? "true" : "false") +
                     ",\"brain\":\"" + brainUrl + "\"" +
-                    ",\"clip\":\"" + audio::currentClip() + "\"}");
+                    ",\"clip\":\"" + audio::currentClip() + "\"" +
+                    ",\"storage\":\"" + storage::name() + "\"}");
   });
 
   server.begin();
@@ -287,6 +288,7 @@ void setup() {
   eyes::begin();
   candles::begin();
   mic::begin();
+  storage::begin();
   audio::begin();
   setupWifi();
   audio::beginNetwork();

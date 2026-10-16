@@ -18,6 +18,12 @@
 #define PIN_MIC_SCK   17
 #define PIN_MIC_SD    18
 
+// microSD module (SPI, own level shifter)
+#define PIN_SD_SCK    13
+#define PIN_SD_MISO   14
+#define PIN_SD_MOSI   21
+#define PIN_SD_CS     47
+
 // ---- Jaw defaults (degrees); overridden by calibration stored in flash ----
 #define JAW_CLOSED_DEG_DEFAULT  90
 #define JAW_OPEN_DEG_DEFAULT    60

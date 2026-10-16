@@ -9,7 +9,7 @@ namespace audio {
 void begin();
 void beginNetwork();  // call after WiFi is up: starts the live UDP listener
 
-bool playFile(const String &path);  // 16-bit PCM WAV on LittleFS
+bool playFile(const String &path);  // 16-bit PCM WAV in /clips (SD or flash)
 bool playRandom();                   // random clip from /clips
 void playTone();  // 3s of beeps: tests the amp and jaw sync
 void stop();

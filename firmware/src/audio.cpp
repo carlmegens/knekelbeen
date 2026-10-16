@@ -1,7 +1,6 @@
 #include "audio.h"
 
 #include <AsyncUDP.h>
-#include <LittleFS.h>
 #include <Preferences.h>
 #include <driver/i2s.h>
 
@@ -9,6 +8,7 @@
 
 #include "config.h"
 #include "jaw.h"
+#include "storage.h"
 
 namespace audio {
 
@@ -168,7 +168,7 @@ struct FileSource : Source {
   uint32_t remaining = 0;
   int16_t *raw = nullptr;
   bool open(const String &path, int maxN) {
-    f = LittleFS.open(path, "r");
+    f = storage::clips().open(path, "r");
     if (!f || !readWavHeader(f, w) || w.rate > 48000) return false;
     remaining = w.dataLen;
     raw = (int16_t *)malloc(maxN * 2 * w.channels);
@@ -351,18 +351,6 @@ void begin() {
   pinLrc = prefs.getInt("lrc", PIN_I2S_LRC);
   pinDin = prefs.getInt("din", PIN_I2S_DIN);
 
-  if (!LittleFS.begin(true)) Serial.println("LittleFS mount failed");
-  LittleFS.mkdir("/clips");
-  // Remove leftovers of failed uploads (e.g. when storage was full).
-  File dir = LittleFS.open("/clips");
-  std::vector<String> empty;
-  for (File f = dir.openNextFile(); f; f = dir.openNextFile())
-    if (f.size() < 44) empty.push_back(String("/clips/") + f.name());
-  dir.close();
-  for (auto &p : empty) {
-    LittleFS.remove(p);
-    Serial.printf("Removed empty clip %s\n", p.c_str());
-  }
   i2sInit();
   xTaskCreatePinnedToCore(audioTask, "audio", 8192, nullptr, 5, &task, 1);
 
@@ -374,7 +362,7 @@ void beginNetwork() {
 }
 
 bool playFile(const String &path) {
-  if (path[0] != '@' && !LittleFS.exists(path)) return false;
+  if (path[0] != '@' && !storage::clips().exists(path)) return false;
   xSemaphoreTake(pathLock, portMAX_DELAY);
   pendingPath = path;
   xSemaphoreGive(pathLock);
@@ -384,7 +372,7 @@ bool playFile(const String &path) {
 }
 
 bool playRandom() {
-  File dir = LittleFS.open("/clips");
+  File dir = storage::clips().open("/clips");
   std::vector<String> names;
   for (File f = dir.openNextFile(); f; f = dir.openNextFile())
     if (String(f.name()).endsWith(".wav")) names.push_back(f.name());
@@ -427,7 +415,7 @@ String currentClip() {
 }
 
 bool isValidWav(const String &path) {
-  File f = LittleFS.open(path, "r");
+  File f = storage::clips().open(path, "r");
   WavInfo w;
   bool ok = f && readWavHeader(f, w) && w.rate >= 8000 && w.rate <= 48000;
   f.close();

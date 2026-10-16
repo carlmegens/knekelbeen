@@ -191,7 +191,8 @@ async function loadClips(){
     'De clip wordt van de schedel verwijderd. Dit kun je niet ongedaan maken.','Clip verwijderen','Behouden')){
     await api('delete?f='+encodeURIComponent(c.name));loadClips()}};
   d.append(n,p,x);box.append(d)}
- if($('free'))$('free').textContent=(j.free/1048576).toFixed(1).replace('.',',')+' MB vrij';
+ if($('free')){const g=j.free>=1073741824,v=g?j.free/1073741824:j.free/1048576;
+  $('free').textContent=v.toFixed(1).replace('.',',')+(g?' GB':' MB')+' vrij'+(j.storage==='sd'?' op de SD-kaart':' in het geheugen')}
  poll()}
 
 // ---- upload (skull page only) ----

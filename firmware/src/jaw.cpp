@@ -1,13 +1,29 @@
 #include "jaw.h"
 
-#include <ESP32Servo.h>
 #include <Preferences.h>
 
 #include "config.h"
 
 namespace jaw {
 
-static Servo servo;
+// Servo pulses straight from the LEDC peripheral. ESP32Servo hung the board
+// once the SD card code was linked in.
+namespace servo {
+static const int CH = 0, BITS = 14, HZ = 50;
+static void attach() {
+  ledcSetup(CH, HZ, BITS);
+  ledcAttachPin(PIN_SERVO, CH);
+}
+static void write(int deg) {  // 0..180 deg = 500..2500 us
+  uint32_t us = 500 + constrain(deg, 0, 180) * 2000 / 180;
+  ledcWrite(CH, us * ((1 << BITS) - 1) / (1000000 / HZ));
+}
+static void detach() {
+  ledcDetachPin(PIN_SERVO);
+  pinMode(PIN_SERVO, OUTPUT);
+  digitalWrite(PIN_SERVO, LOW);
+}
+}  // namespace servo
 static Preferences prefs;
 
 static volatile float targetPos = 0.0f;
@@ -42,16 +58,16 @@ static void jawTask(void *) {
                             : calClosed + (int)lroundf((calOpen - calClosed) * pos);
     if (deg != lastDeg) {
       if (!attached) {
-        servo.attach(PIN_SERVO, 500, 2500);
+        servo::attach();
         attached = true;
       }
-      servo.write(deg);
+      servo::write(deg);
       lastDeg = deg;
       lastMove = now;
     } else if (attached && rawDeg < 0 && targetPos < 0.01f &&
                now - lastMove > JAW_IDLE_RELEASE_MS) {
       // Resting closed: stop pulsing so the servo doesn't buzz/hunt.
-      servo.detach();
+      servo::detach();
       attached = false;
     }
     vTaskDelayUntil(&last, period);
@@ -63,10 +79,8 @@ void begin() {
   calClosed = prefs.getInt("closed", JAW_CLOSED_DEG_DEFAULT);
   calOpen = prefs.getInt("open", JAW_OPEN_DEG_DEFAULT);
 
-  ESP32PWM::allocateTimer(0);
-  servo.setPeriodHertz(50);
-  servo.attach(PIN_SERVO, 500, 2500);
-  servo.write(calClosed);
+  servo::attach();
+  servo::write(calClosed);
 
   xTaskCreatePinnedToCore(jawTask, "jaw", 4096, nullptr, 3, nullptr, 1);
 }
