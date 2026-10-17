@@ -13,7 +13,6 @@ import os
 import re
 import socket
 import struct
-import subprocess
 import time
 import wave
 from pathlib import Path
@@ -384,19 +383,7 @@ def lan_ip() -> str:
     """The laptop's address as seen from the skull's network."""
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         s.connect((SKULL, 80))  # no packets sent; just picks the route
-        ip = s.getsockname()[0]
-    # A VPN can route the home network through its own interface; the skull
-    # can't reach that address, so prefer one on the skull's own subnet.
-    prefix = SKULL.rsplit(".", 1)[0] + "."
-    if not ip.startswith(prefix):
-        try:
-            out = subprocess.run(["ip", "-4", "-o", "addr"], capture_output=True,
-                                 text=True, timeout=2).stdout
-            ip = next((a for a in re.findall(r"inet (\d+\.\d+\.\d+\.\d+)", out)
-                       if a.startswith(prefix)), ip)
-        except (OSError, subprocess.SubprocessError):
-            pass
-    return ip
+        return s.getsockname()[0]
 
 
 async def announce(_app) -> None:
