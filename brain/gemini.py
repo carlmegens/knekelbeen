@@ -30,6 +30,18 @@ if FALLBACK_MODEL == MODEL:
 RETRY_PRIMARY_AFTER_S = 600
 _primary_failed_at = 0.0  # last time MODEL failed; shared by all sessions
 
+# PIR on the skull: someone walked up. A conversation that has gone quiet
+# restarts fresh, and the skull greets them before they say anything.
+VISITOR_GREETING = ("[bewegingssensor] Er komt net iemand bij je staan. Begroet "
+                    "ze kort en griezelig-vriendelijk, in één of twee zinnen.")
+VISITOR_TALKING_S = 12   # quieter than this = still talking with the last group
+VISITOR_EXPIRES_S = 20   # a greeting that couldn't happen by then is dropped
+_visitor = {"at": 0.0}   # last motion, shared by all sessions
+
+
+def note_visitor() -> None:
+    _visitor["at"] = time.monotonic()
+
 
 def current_model() -> str:
     if FALLBACK_MODEL and time.monotonic() - _primary_failed_at < RETRY_PRIMARY_AFTER_S:
@@ -294,6 +306,34 @@ async def converse(session, mic_q, speaker, fx, gate, control, event, ws) -> Non
                         await asyncio.sleep(wait)
                     await event(type="state", state="listening")
 
+    async def greeter():
+        """Greets new arrivals reported by the skull's PIR sensor."""
+        seen = 0.0
+        while True:
+            await asyncio.sleep(0.25)
+            at = _visitor["at"]
+            if at <= seen:
+                continue
+            now = time.monotonic()
+            if now - at > VISITOR_EXPIRES_S:
+                seen = at
+                continue
+            quiet = now - turn["last"]
+            if turn["active"] or now < speaker.done_at:
+                continue  # mid-sentence; try again in a moment
+            if control["has_history"]:
+                if quiet < VISITOR_TALKING_S:
+                    seen = at  # still talking with them: no greeting needed
+                else:
+                    control["restart"] = True  # new group: fresh conversation
+                continue  # the new session greets them
+            seen = at
+            await event(type="effect", text="begroeting")
+            await session.send_client_content(
+                turns=types.Content(role="user", parts=[types.Part(text=VISITOR_GREETING)]),
+                turn_complete=True)
+            turn["last"] = time.monotonic()
+
     async def watchdog():
         """Fresh conversation for new visitors, or on request."""
         while True:
@@ -307,7 +347,7 @@ async def converse(session, mic_q, speaker, fx, gate, control, event, ws) -> Non
     control["active_voice"] = control["voice"]
     control["has_history"] = False
     tasks = [asyncio.create_task(t) for t in
-             (send_mic(), play_audio(), receive(), watchdog())]
+             (send_mic(), play_audio(), receive(), greeter(), watchdog())]
     try:
         done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         for t in done:

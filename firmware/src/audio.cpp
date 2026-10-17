@@ -26,6 +26,7 @@ static String currentPath;
 static SemaphoreHandle_t pathLock;  // guards pendingPath/currentPath
 static volatile int vol = 70;
 static Sync cfg = {400, 60, 100};
+static volatile bool ampSleep = true;
 static uint32_t currentRate = 0;
 static int pinBclk = PIN_I2S_BCLK, pinLrc = PIN_I2S_LRC, pinDin = PIN_I2S_DIN;
 
@@ -45,6 +46,22 @@ struct Envelope {
     return constrain(open, 0.0f, 1.0f);
   }
 };
+
+// ---------- amps ----------
+// The amps sleep while nothing plays, so they can't hum or hiss.
+static void ampsOn() {
+  pinMode(PIN_AMP_L_SD, INPUT);
+  pinMode(PIN_AMP_R_SD, INPUT);
+  if (ampSleep) vTaskDelay(pdMS_TO_TICKS(10));  // wake-up time
+}
+
+static void ampsOff() {
+  if (!ampSleep) return ampsOn();
+  pinMode(PIN_AMP_L_SD, OUTPUT);
+  pinMode(PIN_AMP_R_SD, OUTPUT);
+  digitalWrite(PIN_AMP_L_SD, LOW);
+  digitalWrite(PIN_AMP_R_SD, LOW);
+}
 
 // ---------- I2S ----------
 static void applyPins() {
@@ -329,12 +346,16 @@ static void audioTask(void *) {
       currentPath = path;
       xSemaphoreGive(pathLock);
       playing = true;
+      ampsOn();
       i2s_start(PORT);
       playOne(path);
       xSemaphoreTake(pathLock, portMAX_DELAY);
       bool more = pendingPath.length();
       xSemaphoreGive(pathLock);
-      if (!more) i2s_stop(PORT);
+      if (!more) {
+        i2s_stop(PORT);
+        ampsOff();
+      }
       playing = false;
     }
   }
@@ -347,10 +368,12 @@ void begin() {
   cfg.gate = prefs.getInt("gate", 400);
   cfg.sensitivity = prefs.getInt("sens", 60);
   cfg.leadMs = prefs.getInt("lead", 100);
+  ampSleep = prefs.getBool("ampsleep", true);
   pinBclk = prefs.getInt("bclk", PIN_I2S_BCLK);
   pinLrc = prefs.getInt("lrc", PIN_I2S_LRC);
   pinDin = prefs.getInt("din", PIN_I2S_DIN);
 
+  ampsOff();
   i2sInit();
   xTaskCreatePinnedToCore(audioTask, "audio", 8192, nullptr, 5, &task, 1);
 
@@ -427,6 +450,13 @@ void setVolume(int p) {
   prefs.putInt("vol", vol);
 }
 int volume() { return vol; }
+
+void setAmpSleep(bool on) {
+  ampSleep = on;
+  prefs.putBool("ampsleep", on);
+  if (!playing) ampsOff();  // applies right away (stays on if sleep is off)
+}
+bool ampSleepOn() { return ampSleep; }
 
 Sync sync() { return cfg; }
 void setSync(const Sync &s) {

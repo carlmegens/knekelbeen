@@ -107,6 +107,45 @@
   <button class="sm neutral" onclick="api('candles?effect=flare')">Opflakkeren</button>
   <button class="sm neutral" onclick="api('candles?effect=ghost')">Spookgroen</button></div>
 
+ <h3>Hoofd draaien</h3>
+ <label><input id="tOn" type="checkbox"> Draaiservo aan
+  <span class="help">Uit: de servo op DRAAI krijgt geen signaal en blijft slap. Zet hem pas aan als de nek gemonteerd is.</span></label>
+ <label><input id="tLively" type="checkbox"> Rondkijken tijdens het praten
+  <span class="help">Het hoofd kijkt af en toe opzij terwijl de schedel praat, en daarna weer recht vooruit.</span></label>
+ <div class="row"><label style="margin:0">Midden (°) <input id="tCenter" type="number" min="0" max="180"></label>
+  <button class="sm neutral" onclick="api('turn?deg='+$('tCenter').value)">Test</button></div>
+ <label>Bereik (° naar elke kant) <input id="tRange" type="number" min="0" max="60">
+  <span class="help">Hoe ver het hoofd mag draaien. Blijf binnen de aanslagen van de nek.</span></label>
+ <div class="row"><button class="sm" onclick="saveTurn(this)">Opslaan</button>
+  <button class="sm neutral" onclick="api('turn?pos=-100')">Links</button>
+  <button class="sm neutral" onclick="api('turn?pos=0')">Midden</button>
+  <button class="sm neutral" onclick="api('turn?pos=100')">Rechts</button></div>
+ <span class="help">Sla eerst op, dan werken Links, Midden en Rechts met de nieuwe waarden.</span>
+
+ <h3>Bewegingssensor</h3>
+ <label><input id="pOn" type="checkbox"> Begroeten bij beweging
+  <span class="help">Als de sensor iemand ziet, flitsen de ogen en begroet de AI-schedel de bezoekers met een nieuw gesprek.</span></label>
+ <label>Wachttijd (s) <input id="pCool" type="number" min="5" max="600">
+  <span class="help">Zo lang na een begroeting reageert de sensor niet opnieuw, zodat één groep niet steeds wordt begroet.</span></label>
+ <p class="help" id="pState"></p>
+ <div class="row"><button class="sm" onclick="savePir(this)">Opslaan</button>
+  <button class="sm neutral" onclick="api('pir?test=1');setTimeout(pirPoll,2500)">Test</button></div>
+ <span class="help">Test doet alsof er iemand aankomt. Staat de AI-schedel aan, dan begroet hij je.</span>
+
+ <h3>LED 2</h3>
+ <div class="row"><label style="margin:0">Aantal <input id="lCount" type="number" min="1" max="60"></label>
+  <label style="margin:0">Kleur <input id="lColor" type="color" value="#ff2000" aria-label="Kleur van LED 2"></label></div>
+ <div class="row"><select id="lMode" aria-label="Werking van LED 2">
+   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="2">Uit</option></select></div>
+ <label>Helderheid <span id="lBv"></span>
+  <input id="lB" type="range" min="0" max="100" aria-label="Helderheid van LED 2"></label>
+ <span class="help">Een WS2812-ledje of -strip op de LED 2-aansluiting, bijvoorbeeld in een lantaarn of ketel.</span>
+ <button class="sm" onclick="saveLed2(this)">Opslaan</button>
+
+ <h3>Versterkers</h3>
+ <label><input id="aSleep" type="checkbox"> Uit als er niets speelt
+  <span class="help">Voorkomt brommen en ruisen in stilte. Zet dit uit als het begin van een zin wegvalt.</span></label>
+
  <h3>Servohoeken</h3>
  <div class="row"><label style="margin:0">Dicht <input id="c" type="number" min="0" max="180"></label>
   <button class="sm neutral" onclick="api('raw?deg='+$('c').value)">Test</button></div>
@@ -239,6 +278,23 @@ api('candles').then(r=>r.json()).then(j=>{$('cCount').value=j.count;$('cOrder').
  $('cB').value=j.bright;$('cBv').textContent=j.bright+'%';$('cMode').value=j.mode;
  $('cS').value=j.speed;$('cSv').textContent=j.speed+'%';$('cVoice').checked=j.voice}).catch(()=>{});
 async function saveCal(btn){await api('cal?closed='+$('c').value+'&open='+$('o').value);flash(btn)}
+async function saveTurn(btn){await api('turn?on='+($('tOn').checked?1:0)+'&center='+$('tCenter').value+
+ '&range='+$('tRange').value+'&lively='+($('tLively').checked?1:0));flash(btn)}
+api('turn').then(r=>r.json()).then(j=>{$('tOn').checked=j.enabled;$('tLively').checked=j.lively;
+ $('tCenter').value=j.center;$('tRange').value=j.range}).catch(()=>{});
+async function savePir(btn){await api('pir?on='+($('pOn').checked?1:0)+'&cooldown='+$('pCool').value);flash(btn)}
+async function pirPoll(){if(!$('setup').open)return;try{const j=await(await api('pir')).json();
+ $('pState').textContent=(j.motion?'Ziet nu beweging. ':'Ziet nu niemand. ')+
+  (j.ago<0?'Nog geen begroeting sinds het opstarten.':j.count+'× begroet, laatste keer '+j.ago+' s geleden.')}catch(e){}}
+api('pir').then(r=>r.json()).then(j=>{$('pOn').checked=j.enabled;$('pCool').value=j.cooldown;pirPoll()}).catch(()=>{});
+setInterval(pirPoll,2000);
+const led2Q=()=>'led2?count='+$('lCount').value+'&color='+$('lColor').value.slice(1)+'&bright='+$('lB').value+'&mode='+$('lMode').value;
+async function saveLed2(btn){await api(led2Q());flash(btn)}
+$('lB').oninput=()=>$('lBv').textContent=$('lB').value+'%';
+api('led2').then(r=>r.json()).then(j=>{$('lCount').value=j.count;$('lColor').value='#'+j.color.toLowerCase();
+ $('lB').value=j.bright;$('lBv').textContent=j.bright+'%';$('lMode').value=j.mode}).catch(()=>{});
+$('aSleep').onchange=()=>api('amps?sleep='+($('aSleep').checked?1:0));
+api('amps').then(r=>r.json()).then(j=>{$('aSleep').checked=j.sleep}).catch(()=>{});
 try{$('setup').open=localStorage.getItem('setup')==='1'}catch(e){}
 $('setup').ontoggle=()=>{try{localStorage.setItem('setup',$('setup').open?'1':'0')}catch(e){}};
 

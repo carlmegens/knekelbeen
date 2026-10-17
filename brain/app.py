@@ -13,6 +13,7 @@ import os
 import re
 import socket
 import struct
+import subprocess
 import time
 import wave
 from pathlib import Path
@@ -383,7 +384,19 @@ def lan_ip() -> str:
     """The laptop's address as seen from the skull's network."""
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         s.connect((SKULL, 80))  # no packets sent; just picks the route
-        return s.getsockname()[0]
+        ip = s.getsockname()[0]
+    # A VPN can route the home network through its own interface; the skull
+    # can't reach that address, so prefer one on the skull's own subnet.
+    prefix = SKULL.rsplit(".", 1)[0] + "."
+    if not ip.startswith(prefix):
+        try:
+            out = subprocess.run(["ip", "-4", "-o", "addr"], capture_output=True,
+                                 text=True, timeout=2).stdout
+            ip = next((a for a in re.findall(r"inet (\d+\.\d+\.\d+\.\d+)", out)
+                       if a.startswith(prefix)), ip)
+        except (OSError, subprocess.SubprocessError):
+            pass
+    return ip
 
 
 async def announce(_app) -> None:
@@ -399,6 +412,28 @@ async def announce(_app) -> None:
                 pass  # skull offline; try again later
             await asyncio.sleep(30)
     _app["announcer"] = asyncio.create_task(loop())
+
+
+async def watch_pir(_app) -> None:
+    """Polls the skull's PIR counter; a new arrival lets a running AI session
+    greet them. (Polling, because the laptop firewall keeps the skull from
+    calling in.)"""
+    async def loop():
+        last = None
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(2)) as s:
+            while True:
+                try:
+                    async with s.get(f"{SKULL_URL}/pir") as r:
+                        count = (await r.json(content_type=None))["count"]
+                    if last is not None and count > last:
+                        print("PIR: someone walked up", flush=True)
+                        gemini.note_visitor()
+                    last = count  # also resets after the skull reboots
+                except (OSError, aiohttp.ClientError, asyncio.TimeoutError,
+                        ValueError, KeyError):
+                    pass  # skull offline or old firmware
+                await asyncio.sleep(1)
+    _app["pir_watch"] = asyncio.create_task(loop())
 
 
 async def ai_ws(req: web.Request) -> web.WebSocketResponse:
@@ -558,6 +593,7 @@ def main() -> None:
     print(f"Skull control: http://localhost:8000  (skull at {SKULL_URL})")
     # Short shutdown: open AI/live sockets would otherwise delay a restart 60 s.
     app.on_startup.append(announce)
+    app.on_startup.append(watch_pir)
     # Listen on the LAN too, so the skull's page (and your phone) can start
     # the AI. The laptop page itself must still be opened via localhost for
     # microphone access.

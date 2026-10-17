@@ -25,6 +25,10 @@ bool isValidWav(const String &path);  // 16-bit PCM, 8-48 kHz
 void setVolume(int percent);  // 0..100, persisted
 int volume();
 
+// Amps off (shutdown pin low) while nothing plays: no hum. Persisted.
+void setAmpSleep(bool on);
+bool ampSleepOn();
+
 // Jaw sync tuning (persisted).
 struct Sync {
   int gate;       // RMS below this = mouth closed (noise floor), 0..32767

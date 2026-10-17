@@ -5,6 +5,7 @@
 
 #include "config.h"
 #include "jaw.h"
+#include "led2.h"
 
 namespace eyes {
 
@@ -44,6 +45,7 @@ static void eyesTask(void *) {
     eye.setPixelColor(0, ((rgb >> 16) & 0xFF) * k, ((rgb >> 8) & 0xFF) * k,
                       (rgb & 0xFF) * k);
     eye.show();
+    led2::render();
     vTaskDelayUntil(&last, period);
   }
 }
@@ -53,6 +55,7 @@ void begin() {
   onboard.clear();
   onboard.show();  // onboard LED off
   eye.begin();
+  led2::begin();
   prefs.begin("eyes", false);
   rgb = prefs.getUInt("rgb", 0xFF2000);
   bright = prefs.getInt("bright", 80);

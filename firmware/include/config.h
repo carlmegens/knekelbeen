@@ -7,6 +7,12 @@
 #define PIN_EYES      15   // WS2812 behind the eye sockets
 #define PIN_CANDLE_DATA 11 // WS2801 candle string: data (DI)
 #define PIN_CANDLE_CLK  12 // WS2801 candle string: clock (CI)
+#define PIN_TURN_SERVO 8   // DRAAI header
+#define PIN_PIR       2    // PIR header, high = motion
+#define PIN_LED2      48   // WS2812 on the LED 2 terminal (via 74AHCT125)
+// Amp shutdown pins: input = on (the module's own resistor), output low = off.
+#define PIN_AMP_L_SD  10
+#define PIN_AMP_R_SD  9
 
 // DFRobot I2S amp
 #define PIN_I2S_BCLK  5
@@ -29,6 +35,16 @@
 #define JAW_OPEN_DEG_DEFAULT    60
 // Release the servo after resting closed this long (stops idle ticking).
 #define JAW_IDLE_RELEASE_MS     400
+
+// ---- Turn servo defaults; overridden by settings stored in flash ----
+#define TURN_CENTER_DEG_DEFAULT 90
+#define TURN_RANGE_DEG_DEFAULT  25   // each way; keep inside the neck's stops
+#define TURN_RANGE_DEG_MAX      60
+#define TURN_IDLE_RELEASE_MS    600
+
+// ---- PIR ----
+#define PIR_COOLDOWN_S_DEFAULT  30   // ignore motion this long after a trigger
+#define PIR_WARMUP_MS           45000  // sensors give false triggers at power-up
 
 // ---- Live audio (UDP from the laptop app) ----
 #define LIVE_PORT  4210

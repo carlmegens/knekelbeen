@@ -10,7 +10,10 @@
 #include "eyes.h"
 #include "mic.h"
 #include "jaw.h"
+#include "led2.h"
+#include "pir.h"
 #include "storage.h"
+#include "turn.h"
 
 #if __has_include("secrets.h")
 #include "secrets.h"
@@ -235,6 +238,38 @@ static void setupServer() {
     server.send(200, "text/plain", brainUrl);
   });
 
+  // Turn servo: pos -100..100, or deg= for a raw angle (calibration), or
+  // on/center/range/lively to configure.
+  server.on("/turn", [] {
+    if (server.hasArg("center"))
+      turn::setConfig(server.arg("on") == "1", server.arg("center").toInt(),
+                      server.arg("range").toInt(), server.arg("lively") == "1");
+    if (server.hasArg("deg")) turn::setRawDeg(server.arg("deg").toInt());
+    if (server.hasArg("pos")) turn::setTarget(server.arg("pos").toFloat() / 100.0f);
+    server.send(200, "application/json", turn::json());
+  });
+
+  server.on("/pir", [] {
+    if (server.hasArg("on"))
+      pir::setConfig(server.arg("on") == "1", server.arg("cooldown").toInt());
+    if (server.hasArg("test")) pir::test();
+    server.send(200, "application/json", pir::json());
+  });
+
+  server.on("/led2", [] {
+    if (server.hasArg("color"))
+      led2::set(server.arg("count").toInt(),
+                strtoul(server.arg("color").c_str(), nullptr, 16),
+                server.arg("bright").toInt(), (led2::Mode)server.arg("mode").toInt());
+    server.send(200, "application/json", led2::json());
+  });
+
+  server.on("/amps", [] {
+    if (server.hasArg("sleep")) audio::setAmpSleep(server.arg("sleep") == "1");
+    server.send(200, "application/json",
+                String("{\"sleep\":") + (audio::ampSleepOn() ? "true" : "false") + "}");
+  });
+
   server.on("/mic", [] {
     if (server.hasArg("gain")) mic::setGain(server.arg("gain").toInt());
     char buf[128];
@@ -250,6 +285,7 @@ static void setupServer() {
                 String("{\"playing\":") + (audio::isPlaying() ? "true" : "false") +
                     ",\"live\":" + (audio::isLive() ? "true" : "false") +
                     ",\"brain\":\"" + brainUrl + "\"" +
+                    ",\"motion\":" + (pir::motion() ? "true" : "false") +
                     ",\"clip\":\"" + audio::currentClip() + "\"" +
                     ",\"storage\":\"" + storage::name() + "\"}");
   });
@@ -285,6 +321,7 @@ void setup() {
   delay(1500);
   Serial.println("\n=== Talking Skull ===");
   jaw::begin();
+  turn::begin();
   eyes::begin();
   candles::begin();
   mic::begin();
@@ -295,6 +332,7 @@ void setup() {
   mic::beginNetwork();
   setupServer();
   setupOta();
+  pir::begin();
 }
 
 // The ESP32 never roams on its own. If the signal stays weak (e.g. it booted
