@@ -1,0 +1,26 @@
+# Reach the skull (and the rest of 192.168.2.x) straight over the LAN
+# instead of through the tailnet's subnet router. Without this, OTA uploads
+# fail with "No response from device".
+#
+# suppress_prefixlength 0 ignores the default route, so away from home
+# (no 192.168.2.0/24 route on the LAN) traffic still goes via Tailscale.
+#
+# Install:
+#   sudo cp tools/skull-lan-route.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now skull-lan-route
+
+[Unit]
+Description=Route 192.168.2.0/24 over the LAN, not Tailscale
+After=network-pre.target
+Before=tailscaled.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=-/usr/bin/ip rule del to 192.168.2.0/24 priority 2500
+ExecStart=/usr/bin/ip rule add to 192.168.2.0/24 lookup main suppress_prefixlength 0 priority 2500
+ExecStop=/usr/bin/ip rule del to 192.168.2.0/24 priority 2500
+
+[Install]
+WantedBy=multi-user.target
