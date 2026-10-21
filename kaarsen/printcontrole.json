@@ -1,0 +1,385 @@
+{
+  "revision": "2026-10-21-five-candles-wall-1p2",
+  "parameters": {
+    "revision": "2026-10-21-five-candles-wall-1p2",
+    "variants": [
+      [
+        24,
+        60
+      ],
+      [
+        24,
+        76
+      ],
+      [
+        24,
+        89
+      ],
+      [
+        44,
+        45
+      ],
+      [
+        44,
+        58
+      ]
+    ],
+    "wall_mm": 1.2,
+    "fit_wall_mm": 2.0,
+    "reinforced_top_height_mm": 14.0,
+    "wall_transition_height_mm": 1.6,
+    "holder_recess_mm": 7.5,
+    "holder_seat_width_mm": 2.2,
+    "holder_seat_thickness_mm": 2.0,
+    "top_template_height_mm": 32.0,
+    "reference_module_below_body_top_mm": 30.2,
+    "reference_module_envelope_diameter_mm": 14.0
+  },
+  "parts": {
+    "kaars_D24_H60": {
+      "triangles": 13010,
+      "closed_manifold": true,
+      "consistent_normals": true,
+      "stl_volume_mm3": 6332.56,
+      "valid_brep": true,
+      "solids": 1,
+      "volume_mm3": 6329.528,
+      "zero_area_export_triangles_removed": 6,
+      "step_roundtrip_volume_delta_mm3": 0.00023280040204554098,
+      "bounding_dimensions_mm": [
+        25.2277,
+        24.7876,
+        60.0197
+      ],
+      "body_holder_overlap_mm3": 0.0,
+      "body_cap_overlap_mm3": 0.0,
+      "holder_cap_overlap_mm3": 0.0,
+      "module_bottom_height_mm": 29.8,
+      "module_envelope_diameter_mm": 14.0,
+      "module_envelope_is_assumed": true,
+      "wire_bend_not_physically_checked": true,
+      "holder_diameter_mm": 19.6,
+      "holder_diametral_clearance_mm": 0.4,
+      "seat_minimum_bore_mm": 15.6,
+      "body_diameter_mm": 24,
+      "body_height_mm": 60,
+      "nominal_wall_mm": 1.2,
+      "overhang": {
+        "overhang_convention": "degrees from vertical; 0=vertical, 90=horizontal underside",
+        "mesh_measurement_tolerance_degrees": 0.1,
+        "maximum_overhang_degrees_from_vertical": 89.899,
+        "area_above_45p1_degrees_mm2": 3.78013,
+        "triangles_above_45p1_degrees": 60,
+        "flagged_z_range_mm": [
+          11.3255,
+          11.9105
+        ],
+        "build_plate_faces_excluded": true,
+        "rounded_apices": [
+          {
+            "center_x_mm": 0,
+            "width_mm": 12.0,
+            "shoulder_height_mm": 5.0,
+            "shoulder_radius_mm": 4.199999999999999,
+            "apex_radius_mm": 2.0,
+            "virtual_peak_mm": 12.739696961966999,
+            "peak_height_mm": 11.911269837220809,
+            "apex_tangent_height_mm": 11.325483399593903,
+            "small_roof_closure_width_mm": 2.8284271247461903
+          }
+        ],
+        "area_above_45p1_outside_small_apices_mm2": 0.0,
+        "exception": "Only the R2 mm rounded apex exceeds 45 degrees: 2.828 mm closing span; intended to bridge without support."
+      },
+      "reference_2mm_body_volume_mm3": 8594.6173,
+      "body_volume_reduction_percent": 26.35,
+      "material_added_outside_reference_mm3": 0.0,
+      "upper_14mm_fit_zone_change_mm3": 0.0,
+      "nominal_1p2mm_wall_and_2mm_fit_wall_sample_checks_passed": true,
+      "stl_dimensions_mm": [
+        25.2219,
+        24.7817,
+        60.0
+      ]
+    },
+    "kaars_D24_H76": {
+      "triangles": 13010,
+      "closed_manifold": true,
+      "consistent_normals": true,
+      "stl_volume_mm3": 7708.6,
+      "valid_brep": true,
+      "solids": 1,
+      "volume_mm3": 7704.7916,
+      "zero_area_export_triangles_removed": 6,
+      "step_roundtrip_volume_delta_mm3": 0.00027889418834092794,
+      "bounding_dimensions_mm": [
+        25.2277,
+        24.7876,
+        76.0165
+      ],
+      "body_holder_overlap_mm3": 0.0,
+      "body_cap_overlap_mm3": 0.0,
+      "holder_cap_overlap_mm3": 0.0,
+      "module_bottom_height_mm": 45.8,
+      "module_envelope_diameter_mm": 14.0,
+      "module_envelope_is_assumed": true,
+      "wire_bend_not_physically_checked": true,
+      "holder_diameter_mm": 19.6,
+      "holder_diametral_clearance_mm": 0.4,
+      "seat_minimum_bore_mm": 15.6,
+      "body_diameter_mm": 24,
+      "body_height_mm": 76,
+      "nominal_wall_mm": 1.2,
+      "overhang": {
+        "overhang_convention": "degrees from vertical; 0=vertical, 90=horizontal underside",
+        "mesh_measurement_tolerance_degrees": 0.1,
+        "maximum_overhang_degrees_from_vertical": 89.899,
+        "area_above_45p1_degrees_mm2": 3.78013,
+        "triangles_above_45p1_degrees": 60,
+        "flagged_z_range_mm": [
+          11.3255,
+          11.9105
+        ],
+        "build_plate_faces_excluded": true,
+        "rounded_apices": [
+          {
+            "center_x_mm": 0,
+            "width_mm": 12.0,
+            "shoulder_height_mm": 5.0,
+            "shoulder_radius_mm": 4.199999999999999,
+            "apex_radius_mm": 2.0,
+            "virtual_peak_mm": 12.739696961966999,
+            "peak_height_mm": 11.911269837220809,
+            "apex_tangent_height_mm": 11.325483399593903,
+            "small_roof_closure_width_mm": 2.8284271247461903
+          }
+        ],
+        "area_above_45p1_outside_small_apices_mm2": 0.0,
+        "exception": "Only the R2 mm rounded apex exceeds 45 degrees: 2.828 mm closing span; intended to bridge without support."
+      },
+      "reference_2mm_body_volume_mm3": 10806.2985,
+      "body_volume_reduction_percent": 28.7,
+      "material_added_outside_reference_mm3": 0.0,
+      "upper_14mm_fit_zone_change_mm3": 0.0,
+      "nominal_1p2mm_wall_and_2mm_fit_wall_sample_checks_passed": true,
+      "stl_dimensions_mm": [
+        25.2219,
+        24.7817,
+        76.0
+      ]
+    },
+    "kaars_D24_H89": {
+      "triangles": 13010,
+      "closed_manifold": true,
+      "consistent_normals": true,
+      "stl_volume_mm3": 8826.49,
+      "valid_brep": true,
+      "solids": 1,
+      "volume_mm3": 8822.1932,
+      "zero_area_export_triangles_removed": 6,
+      "step_roundtrip_volume_delta_mm3": 0.0003163429009873653,
+      "bounding_dimensions_mm": [
+        25.2277,
+        24.7876,
+        89.0165
+      ],
+      "body_holder_overlap_mm3": 0.0,
+      "body_cap_overlap_mm3": 0.0,
+      "holder_cap_overlap_mm3": 0.0,
+      "module_bottom_height_mm": 58.8,
+      "module_envelope_diameter_mm": 14.0,
+      "module_envelope_is_assumed": true,
+      "wire_bend_not_physically_checked": true,
+      "holder_diameter_mm": 19.6,
+      "holder_diametral_clearance_mm": 0.4,
+      "seat_minimum_bore_mm": 15.6,
+      "body_diameter_mm": 24,
+      "body_height_mm": 89,
+      "nominal_wall_mm": 1.2,
+      "overhang": {
+        "overhang_convention": "degrees from vertical; 0=vertical, 90=horizontal underside",
+        "mesh_measurement_tolerance_degrees": 0.1,
+        "maximum_overhang_degrees_from_vertical": 89.899,
+        "area_above_45p1_degrees_mm2": 3.78013,
+        "triangles_above_45p1_degrees": 60,
+        "flagged_z_range_mm": [
+          11.3255,
+          11.9105
+        ],
+        "build_plate_faces_excluded": true,
+        "rounded_apices": [
+          {
+            "center_x_mm": 0,
+            "width_mm": 12.0,
+            "shoulder_height_mm": 5.0,
+            "shoulder_radius_mm": 4.199999999999999,
+            "apex_radius_mm": 2.0,
+            "virtual_peak_mm": 12.739696961966999,
+            "peak_height_mm": 11.911269837220809,
+            "apex_tangent_height_mm": 11.325483399593903,
+            "small_roof_closure_width_mm": 2.8284271247461903
+          }
+        ],
+        "area_above_45p1_outside_small_apices_mm2": 0.0,
+        "exception": "Only the R2 mm rounded apex exceeds 45 degrees: 2.828 mm closing span; intended to bridge without support."
+      },
+      "reference_2mm_body_volume_mm3": 12603.2895,
+      "body_volume_reduction_percent": 30.0,
+      "material_added_outside_reference_mm3": 0.0,
+      "upper_14mm_fit_zone_change_mm3": 0.0,
+      "nominal_1p2mm_wall_and_2mm_fit_wall_sample_checks_passed": true,
+      "stl_dimensions_mm": [
+        25.2219,
+        24.7817,
+        89.0
+      ]
+    },
+    "kaars_D44_H45": {
+      "triangles": 11682,
+      "closed_manifold": true,
+      "consistent_normals": true,
+      "stl_volume_mm3": 9820.51,
+      "valid_brep": true,
+      "solids": 1,
+      "volume_mm3": 9813.4424,
+      "zero_area_export_triangles_removed": 6,
+      "step_roundtrip_volume_delta_mm3": 0.0004973638751835097,
+      "bounding_dimensions_mm": [
+        46.2508,
+        45.444,
+        45.0429
+      ],
+      "body_holder_overlap_mm3": 0.0,
+      "body_cap_overlap_mm3": 0.0,
+      "holder_cap_overlap_mm3": 0.0,
+      "module_bottom_height_mm": 14.8,
+      "module_envelope_diameter_mm": 14.0,
+      "module_envelope_is_assumed": true,
+      "wire_bend_not_physically_checked": true,
+      "holder_diameter_mm": 39.6,
+      "holder_diametral_clearance_mm": 0.4,
+      "seat_minimum_bore_mm": 35.6,
+      "body_diameter_mm": 44,
+      "body_height_mm": 45,
+      "nominal_wall_mm": 1.2,
+      "overhang": {
+        "overhang_convention": "degrees from vertical; 0=vertical, 90=horizontal underside",
+        "mesh_measurement_tolerance_degrees": 0.1,
+        "maximum_overhang_degrees_from_vertical": 89.8988,
+        "area_above_45p1_degrees_mm2": 3.77247,
+        "triangles_above_45p1_degrees": 60,
+        "flagged_z_range_mm": [
+          16.4853,
+          17.0703
+        ],
+        "build_plate_faces_excluded": true,
+        "rounded_apices": [
+          {
+            "center_x_mm": 0,
+            "width_mm": 20,
+            "shoulder_height_mm": 5.0,
+            "shoulder_radius_mm": 7.0,
+            "apex_radius_mm": 2.0,
+            "virtual_peak_mm": 17.899494936611667,
+            "peak_height_mm": 17.071067811865476,
+            "apex_tangent_height_mm": 16.48528137423857,
+            "small_roof_closure_width_mm": 2.8284271247461903
+          }
+        ],
+        "area_above_45p1_outside_small_apices_mm2": 0.0,
+        "exception": "Only the R2 mm rounded apex exceeds 45 degrees: 2.828 mm closing span; intended to bridge without support."
+      },
+      "reference_2mm_body_volume_mm3": 12698.4298,
+      "body_volume_reduction_percent": 22.72,
+      "material_added_outside_reference_mm3": 0.0,
+      "upper_14mm_fit_zone_change_mm3": 0.0,
+      "nominal_1p2mm_wall_and_2mm_fit_wall_sample_checks_passed": true,
+      "stl_dimensions_mm": [
+        46.2401,
+        45.4331,
+        45.0
+      ]
+    },
+    "kaars_D44_H58": {
+      "triangles": 11694,
+      "closed_manifold": true,
+      "consistent_normals": true,
+      "stl_volume_mm3": 11922.1,
+      "valid_brep": true,
+      "solids": 1,
+      "volume_mm3": 11911.021,
+      "zero_area_export_triangles_removed": 6,
+      "step_roundtrip_volume_delta_mm3": 0.0005650806797348196,
+      "bounding_dimensions_mm": [
+        46.2508,
+        45.444,
+        58.0362
+      ],
+      "body_holder_overlap_mm3": 0.0,
+      "body_cap_overlap_mm3": 0.0,
+      "holder_cap_overlap_mm3": 0.0,
+      "module_bottom_height_mm": 27.8,
+      "module_envelope_diameter_mm": 14.0,
+      "module_envelope_is_assumed": true,
+      "wire_bend_not_physically_checked": true,
+      "holder_diameter_mm": 39.6,
+      "holder_diametral_clearance_mm": 0.4,
+      "seat_minimum_bore_mm": 35.6,
+      "body_diameter_mm": 44,
+      "body_height_mm": 58,
+      "nominal_wall_mm": 1.2,
+      "overhang": {
+        "overhang_convention": "degrees from vertical; 0=vertical, 90=horizontal underside",
+        "mesh_measurement_tolerance_degrees": 0.1,
+        "maximum_overhang_degrees_from_vertical": 89.8988,
+        "area_above_45p1_degrees_mm2": 3.77247,
+        "triangles_above_45p1_degrees": 60,
+        "flagged_z_range_mm": [
+          16.4853,
+          17.0703
+        ],
+        "build_plate_faces_excluded": true,
+        "rounded_apices": [
+          {
+            "center_x_mm": 0,
+            "width_mm": 20,
+            "shoulder_height_mm": 5.0,
+            "shoulder_radius_mm": 7.0,
+            "apex_radius_mm": 2.0,
+            "virtual_peak_mm": 17.899494936611667,
+            "peak_height_mm": 17.071067811865476,
+            "apex_tangent_height_mm": 16.48528137423857,
+            "small_roof_closure_width_mm": 2.8284271247461903
+          }
+        ],
+        "area_above_45p1_outside_small_apices_mm2": 0.0,
+        "exception": "Only the R2 mm rounded apex exceeds 45 degrees: 2.828 mm closing span; intended to bridge without support."
+      },
+      "reference_2mm_body_volume_mm3": 16129.049,
+      "body_volume_reduction_percent": 26.15,
+      "material_added_outside_reference_mm3": 0.0,
+      "upper_14mm_fit_zone_change_mm3": 0.0,
+      "nominal_1p2mm_wall_and_2mm_fit_wall_sample_checks_passed": true,
+      "stl_dimensions_mm": [
+        46.2401,
+        45.4331,
+        58.0
+      ]
+    }
+  },
+  "digital_only": true,
+  "physically_test_printed": false,
+  "slicer_run": false,
+  "volume_savings_are_geometry_not_sliced_filament_or_print_time": true,
+  "fit_files_preserved_byte_for_byte": {
+    "onderdelen/step/ledhouder_D24_gat12mm.step": "93050cbc566022d0e03e9c6ed2a4098bfa89f1df43deeea173c379d076aa0814",
+    "onderdelen/step/ledhouder_D44_gat12mm.step": "e18f2519a846710ddd988a33d7f224baa5ccbe9a2eaf6c55854b584cadb46fbd",
+    "onderdelen/step/vlam_ledtip_7p8mm.step": "9a576ced4e5697d83a1161427ef3042b7b7d5a53512757fd247920cb37a187ee",
+    "onderdelen/step/vlam_ledtip_7p9mm.step": "ce893bbc91ecf50821110fd146f7d204343850dc00956b0e928eb7af07786e00",
+    "onderdelen/stl/ledhouder_D24_gat12mm.stl": "577c679b579febdd6d7b3b97bb71d1c0fc28cc03d8264f862ae3d4d9921b93b6",
+    "onderdelen/stl/ledhouder_D44_gat12mm.stl": "d42d07d27617f5cefe44b6bef841c41d7a4ef8603ba4fbf593428147ae6ed6d9",
+    "onderdelen/stl/vlam_ledtip_7p8mm.stl": "37561a5b6e1a33997d20ed3fd1a9fe6db1bacd7be1858637ebd6bed4f7ed7bb8",
+    "onderdelen/stl/vlam_ledtip_7p9mm.stl": "e199e19a22640ce4889e25b73a85ed14ef7ae88fc2c00b4ff152b1cf60336c3a"
+  },
+  "body_count": 5
+}
