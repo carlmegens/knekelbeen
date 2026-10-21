@@ -35,6 +35,7 @@
 #define JAW_OPEN_DEG_DEFAULT    60
 // Release the servo after resting closed this long (stops idle ticking).
 #define JAW_IDLE_RELEASE_MS     400
+#define JAW_SOFT_MS_DEFAULT     22   // ease in/out; ~0.1 s for a full open
 
 // ---- Turn servo defaults; overridden by settings stored in flash ----
 #define TURN_CENTER_DEG_DEFAULT 90

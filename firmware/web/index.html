@@ -67,6 +67,10 @@
   <span class="help">Lager laat de kaak verder opengaan.</span></label>
  <label>Kaak-voorsprong (ms) <input id="lead" type="number">
   <span class="help">Beweegt de kaak net vóór het geluid, om de vertraging van de servo op te vangen.</span></label>
+ <label>Zachtheid <span id="softv"></span>
+  <input id="soft" type="range" min="0" max="80" step="2" aria-label="Zachtheid van de kaak">
+  <span class="ends"><span>Snel en hard</span><span>Zacht en traag</span></span>
+  <span class="help">Hoe geleidelijk de kaak optrekt en afremt. Klapt hij dicht, zet dit hoger; volgt hij de woorden niet meer, lager (en eventueel meer voorsprong). Werkt direct; probeer het met Klapperen.</span></label>
  <div class="row"><button class="sm" onclick="saveSync(this)">Opslaan</button>
   <button class="sm neutral" onclick="api('tone')">Testtoon</button></div>
 
@@ -259,6 +263,10 @@ let posBusy=false,posNext=null;
 async function sendPos(v){if(posBusy){posNext=v;return}posBusy=true;
  try{await api('jaw?pos='+v)}catch(e){}posBusy=false;if(posNext!==null){const n=posNext;posNext=null;sendPos(n)}}
 function setPos(v){$('pos').value=v;$('posv').textContent=v;sendPos(v)}
+const softLbl=v=>v==0?'uit':v+' ms';
+let softT;$('soft').oninput=()=>{$('softv').textContent=softLbl($('soft').value);clearTimeout(softT);
+ softT=setTimeout(()=>api('jaw?soft='+$('soft').value),150)};
+api('jaw').then(r=>r.json()).then(j=>{$('soft').value=j.soft;$('softv').textContent=softLbl(j.soft)}).catch(()=>{});
 $('pos').oninput=()=>setPos($('pos').value);
 async function saveSync(btn){await api('sync?gate='+$('gate').value+'&sens='+$('sens').value+'&lead='+$('lead').value);flash(btn)}
 const eyeQ=()=>'eyes?color='+$('eyeColor').value.slice(1)+'&bright='+$('eyeB').value+'&mode='+$('eyeMode').value;

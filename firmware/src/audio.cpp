@@ -158,7 +158,6 @@ static void synthTone() {
   int16_t buf[rate / 100];
   Envelope env;
   env.reset();
-  jaw::setSmoothing(0.6f);
   uint32_t t = 0;
   for (int b = 0; b < 300 && !stopFlag; b++) {
     bool on = (b / 20) % 2 == 0;
@@ -287,7 +286,6 @@ static void playSource(Source &src) {
   int head = 0, filled = 0;
   Envelope env;
   env.reset();
-  jaw::setSmoothing(0.6f);
 
   int drain = leadBlocks + 1;  // blocks still to flush from the ring after EOF
   bool ended = false;

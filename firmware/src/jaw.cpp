@@ -14,9 +14,9 @@ static void attach() {
   ledcSetup(CH, HZ, BITS);
   ledcAttachPin(PIN_SERVO, CH);
 }
-static void write(int deg) {  // 0..180 deg = 500..2500 us
-  uint32_t us = 500 + constrain(deg, 0, 180) * 2000 / 180;
-  ledcWrite(CH, us * ((1 << BITS) - 1) / (1000000 / HZ));
+static void write(float deg) {  // 0..180 deg = 500..2500 us
+  float us = 500 + constrain(deg, 0.0f, 180.0f) * 2000 / 180;
+  ledcWrite(CH, (uint32_t)(us * ((1 << BITS) - 1) / (1000000 / HZ)));
 }
 static void detach() {
   ledcDetachPin(PIN_SERVO);
@@ -27,17 +27,20 @@ static void detach() {
 static Preferences prefs;
 
 static volatile float targetPos = 0.0f;
-static volatile float smoothing = 0.5f;
+static volatile int softMs = JAW_SOFT_MS_DEFAULT;
 static volatile int calClosed = JAW_CLOSED_DEG_DEFAULT;
 static volatile int calOpen = JAW_OPEN_DEG_DEFAULT;
 static volatile uint32_t chatterUntil = 0;
 static volatile int rawDeg = -1;
 
+// The jaw follows its target like a critically damped spring: it speeds up
+// gently, slows down before it arrives and never overshoots, so it doesn't
+// slam into the closed stop. Closing is a bit slower than opening.
 static void jawTask(void *) {
   const TickType_t period = pdMS_TO_TICKS(10);  // 100 Hz update
+  const float dt = 0.01f;
   TickType_t last = xTaskGetTickCount();
-  float pos = 0.0f;
-  int lastDeg = -1;
+  float pos = 0.0f, vel = 0.0f, lastDeg = -1;
   uint32_t nextChatter = 0;
   uint32_t lastMove = 0;
   bool attached = true;
@@ -53,10 +56,21 @@ static void jawTask(void *) {
       targetPos = 0.0f;
     }
 
-    pos += (targetPos - pos) * smoothing;
-    int deg = (rawDeg >= 0) ? rawDeg
-                            : calClosed + (int)lroundf((calOpen - calClosed) * pos);
-    if (deg != lastDeg) {
+    float goal = targetPos;
+    if (softMs <= 0) {
+      pos = goal;
+      vel = 0;
+    } else {
+      float t = softMs / 1000.0f * (goal < pos ? 1.5f : 1.0f);
+      float w = 1.0f / t;
+      // Semi-implicit Euler; stable as long as w*dt stays well below 1.
+      vel += (w * w * (goal - pos) - 2 * w * vel) * dt;
+      pos += vel * dt;
+      if (pos < 0) pos = 0, vel = 0;
+      if (pos > 1) pos = 1, vel = 0;
+    }
+    float deg = (rawDeg >= 0) ? rawDeg : calClosed + (calOpen - calClosed) * pos;
+    if (fabsf(deg - lastDeg) >= 0.05f) {
       if (!attached) {
         servo::attach();
         attached = true;
@@ -78,6 +92,7 @@ void begin() {
   prefs.begin("jaw", false);
   calClosed = prefs.getInt("closed", JAW_CLOSED_DEG_DEFAULT);
   calOpen = prefs.getInt("open", JAW_OPEN_DEG_DEFAULT);
+  softMs = prefs.getInt("soft", JAW_SOFT_MS_DEFAULT);
 
   servo::attach();
   servo::write(calClosed);
@@ -103,7 +118,12 @@ void setCalibration(int closed, int open) {
 int closedDeg() { return calClosed; }
 int openDeg() { return calOpen; }
 
-void setSmoothing(float alpha) { smoothing = constrain(alpha, 0.01f, 1.0f); }
+void setSoftness(int ms) {
+  softMs = ms <= 0 ? 0 : constrain(ms, 12, 80);  // below 12 ms the 10 ms steps get unstable
+  prefs.putInt("soft", softMs);
+}
+
+int softness() { return softMs; }
 
 void chatter(uint32_t ms) {
   rawDeg = -1;

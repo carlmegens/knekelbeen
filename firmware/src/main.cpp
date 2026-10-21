@@ -65,13 +65,12 @@ static void setupServer() {
   server.on("/", [] { server.send(200, "text/html; charset=utf-8", PAGE); });
 
   server.on("/jaw", [] {
-    jaw::setSmoothing(0.5f);
-    jaw::setTarget(server.arg("pos").toFloat() / 100.0f);
-    server.send(200, "text/plain", "ok");
+    if (server.hasArg("soft")) jaw::setSoftness(server.arg("soft").toInt());
+    if (server.hasArg("pos")) jaw::setTarget(server.arg("pos").toFloat() / 100.0f);
+    server.send(200, "application/json", String("{\"soft\":") + jaw::softness() + "}");
   });
 
   server.on("/chatter", [] {
-    jaw::setSmoothing(0.5f);
     uint32_t ms = server.hasArg("ms") ? server.arg("ms").toInt() : 3000;
     jaw::chatter(ms);
     server.send(200, "text/plain", "ok");

@@ -153,6 +153,10 @@
   <span class="help">Lager laat de kaak verder opengaan.</span></label>
  <label>Kaak-voorsprong (ms) <input id="sLead" type="number">
   <span class="help">Beweegt de kaak net vóór het geluid, om de vertraging van de servo op te vangen.</span></label>
+ <label>Zachtheid <span id="sSoftv"></span>
+  <input id="sSoft" type="range" min="0" max="80" step="2" aria-label="Zachtheid van de kaak">
+  <span class="ends"><span>Snel en hard</span><span>Zacht en traag</span></span>
+  <span class="help">Hoe geleidelijk de kaak optrekt en afremt. Klapt hij dicht, zet dit hoger; volgt hij de woorden niet meer, lager (en eventueel meer voorsprong). Werkt direct; probeer het met Klapperen.</span></label>
  <div class="row"><button class="sm" onclick="saveSync(this)">Opslaan</button>
   <button class="sm neutral" onclick="api('tone')">Testtoon</button></div>
 </details>
@@ -430,7 +434,8 @@ lb.onpointerdown=e=>{if(liveMode()==='hold'){lb.setPointerCapture(e.pointerId);l
 lb.onpointerup=lb.onpointercancel=()=>{if(liveMode()==='hold')liveSet(false)};
 lb.onclick=()=>{if(liveMode()==='toggle')liveSet(!L.on)};
 lb.oncontextmenu=e=>e.preventDefault();
-const typing=()=>['INPUT','TEXTAREA'].includes(document.activeElement.tagName)&&document.activeElement.type==='text';
+const typing=()=>{const a=document.activeElement;
+ return a.tagName==='TEXTAREA'||a.isContentEditable||a.tagName==='INPUT'&&['text','number','search'].includes(a.type)};
 document.addEventListener('keydown',e=>{if(e.code!=='Space'||e.repeat||typing())return;e.preventDefault();
  liveMode()==='hold'?liveSet(true):liveSet(!L.on)});
 document.addEventListener('keyup',e=>{if(e.code!=='Space'||typing())return;e.preventDefault();if(liveMode()==='hold')liveSet(false)});
@@ -567,6 +572,7 @@ async function loadSettings(){
  const [sync,cal,eyes,cand]=await Promise.all([getJ('sync'),getJ('cal'),getJ('eyes'),getJ('candles')]);
  if(sync){$('sGate').value=sync.gate;$('sSens').value=sync.sens;$('sLead').value=sync.lead}
  if(cal){$('sC').value=cal.closed;$('sO').value=cal.open}
+ const jaw=await getJ('jaw');if(jaw){$('sSoft').value=jaw.soft;$('sSoftv').textContent=softLbl(jaw.soft)}
  if(eyes){$('eyeColor').value='#'+eyes.color.toLowerCase();$('eyeB').value=eyes.bright;$('eyeBv').textContent=eyes.bright+'%';$('eyeMode').value=eyes.mode}
  if(cand){$('cCount').value=cand.count;$('cOrder').value=cand.order;$('cB').value=cand.bright;$('cBv').textContent=cand.bright+'%';
   $('cMode').value=cand.mode;$('cS').value=cand.speed;$('cSv').textContent=cand.speed+'%';$('cVoice').checked=cand.voice}
@@ -602,6 +608,9 @@ const sendSpeed=liveSender('candles?speed='),sendPos=liveSender('jaw?pos=');
 $('cS').oninput=()=>{$('cSv').textContent=$('cS').value+'%';sendSpeed($('cS').value)};
 function setPos(v){$('sPos').value=v;$('sPosv').textContent=v;sendPos(v)}
 $('sPos').oninput=()=>setPos($('sPos').value);
+const softLbl=v=>v==0?'uit':v+' ms';
+let softT;$('sSoft').oninput=()=>{$('sSoftv').textContent=softLbl($('sSoft').value);clearTimeout(softT);
+ softT=setTimeout(()=>api('jaw?soft='+$('sSoft').value),150)};
 getJ('sync').then(j=>{if(j){$('vol').value=j.vol;$('volv').textContent=j.vol+'%'}});
 showView();
 // Remember which panels are open
