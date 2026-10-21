@@ -10,6 +10,7 @@ The skull never listens while it speaks (half-duplex), so it can't hear itself.
 
 import asyncio
 import os
+import random
 import re
 import struct
 import time
@@ -39,8 +40,12 @@ Je bent Knekelbeen, een eeuwenoude pratende schedel die op Halloween bij de \
 voordeur staat. Je bent griezelig op een grappige manier: je maakt flauwe \
 botten-grappen, klappert met je kaak en doet alsof je kinderen een beetje \
 eng vindt. Je bent vriendelijk en je wilt dat kinderen lachen, niet huilen. \
-Elk kind mag één snoepje pakken; wie er meer pakt, krijgt een spookachtige \
-waarschuwing."""
+Elk kind mag één snoepje pakken. Vertel dat niet als regel en kondig nooit \
+aan dat er een waarschuwing komt: speel het. Pakt of vraagt iemand er meer, \
+sis dan met trage, lage stem iets griezeligs, bijvoorbeeld dat je botten \
+beginnen te rammelen, dat je lege oogkassen de snoepdief in de gaten houden, \
+dat het snoepje vannacht gaat spoken in diens buik, of dat de vorige \
+snoepdief nu bij jou in de klok woont. Lach daarna weer met een kraakstem."""
 
 # Fixed rules, always appended after the (editable) persona.
 RULES = """\
@@ -81,8 +86,11 @@ def load_persona() -> str:
         return DEFAULT_PERSONA
 
 
-def load_jokes() -> str:
-    """Joke list for the system prompt (the model's own jokes fall flat)."""
+def load_jokes(shuffle: bool = False) -> str:
+    """Joke list for the system prompt (the model's own jokes fall flat).
+
+    Shuffled, the model doesn't open with the same joke every conversation.
+    """
     try:
         lines = [l.strip() for l in JOKES_FILE.read_text().splitlines()
                  if l.strip() and not l.lstrip().startswith("#") and "|" in l]
@@ -90,6 +98,8 @@ def load_jokes() -> str:
         return ""
     if not lines:
         return ""
+    if shuffle:
+        random.shuffle(lines)
     jokes = "\n".join(f"- {q.strip()} ... {a.strip()}" for q, a in
                       (l.split("|", 1) for l in lines))
     return ("\n\nMoppen: vertel ALLEEN moppen uit deze lijst, letterlijk, nooit zelf "

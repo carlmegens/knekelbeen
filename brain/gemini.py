@@ -84,6 +84,9 @@ EFFECT_COOLDOWN_S = 6.0
 EFFECT_TOOL = types.Tool(function_declarations=[types.FunctionDeclaration(
     name="speciaal_effect",
     description="Laat de kaarsen of de ogen van de schedel een dramatisch effect doen.",
+    # Non-blocking + a SILENT response: the model keeps talking and doesn't
+    # answer the "ok" with a new turn (it used to repeat its sentence).
+    behavior=types.Behavior.NON_BLOCKING,
     parameters_json_schema={
         "type": "object",
         "properties": {"effect": {"type": "string", "enum": list(EFFECTS)}},
@@ -164,7 +167,7 @@ def live_config(voice: str) -> types.LiveConnectConfig:
     return types.LiveConnectConfig(
         response_modalities=["AUDIO"],
         system_instruction=(ai.load_persona() + ai.RULES + LANGUAGE_RULE
-                            + EFFECT_RULE + ai.load_jokes()),
+                            + EFFECT_RULE + ai.load_jokes(shuffle=True)),
         tools=[EFFECT_TOOL],
         speech_config=types.SpeechConfig(voice_config=types.VoiceConfig(
             prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice))),
@@ -399,7 +402,9 @@ async def handle_tool_call(session, tool_call, speaker, event) -> None:
             result = {"result": "ok"}
         else:
             result = {"error": f"onbekend effect: {effect}"}
-        responses.append(types.FunctionResponse(id=fc.id, name=fc.name, response=result))
+        responses.append(types.FunctionResponse(
+            id=fc.id, name=fc.name, response=result,
+            scheduling=types.FunctionResponseScheduling.SILENT))
     await session.send_tool_response(function_responses=responses)
 
 
