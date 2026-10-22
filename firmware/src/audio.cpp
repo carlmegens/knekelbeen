@@ -99,13 +99,23 @@ static void setRate(uint32_t rate) {
 }
 
 // Mono samples -> stereo frames with volume applied, blocking write.
+// When the last block with real sound went out, and how long after that it
+// can still be heard (the DMA buffers plus a little room echo).
+static volatile uint32_t lastSoundMs = 0;
+static volatile uint32_t audibleTailMs = 0;
+static const int SOUND_LEVEL = 300;  // about -40 dBFS
+static const int ROOM_ECHO_MS = 120;
+
 static void writeMono(const int16_t *s, int n) {
   static int16_t frames[2 * 480];
   int v = vol;
+  bool sound = false;
   for (int i = 0; i < n; i++) {
     int16_t x = (int32_t)s[i] * v / 100;
     frames[2 * i] = frames[2 * i + 1] = x;
+    if (x > SOUND_LEVEL || x < -SOUND_LEVEL) sound = true;
   }
+  if (sound) lastSoundMs = millis();
   size_t written;
   i2s_write(PORT, frames, n * 4, &written, portMAX_DELAY);
 }
@@ -279,6 +289,7 @@ static void playSource(Source &src) {
   const int dmaMs = DMA_BUFS * DMA_LEN * 1000 / rate;
   const int leadBlocks =
       constrain((cfg.leadMs - dmaMs) / 10, 0, MAX_LEAD_BLOCKS);
+  audibleTailMs = dmaMs + ROOM_ECHO_MS;
 
   // Delay line: audio sits here `leadBlocks` blocks while the jaw already
   // moves, compensating for the servo's mechanical lag.
@@ -425,6 +436,11 @@ String pins() {
 void stop() { stopFlag = true; }
 bool isPlaying() { return playing; }
 bool isLive() { return liveActive; }
+// "Playing" lasts until a live stream times out (LIVE_IDLE_END_MS after its
+// last packet), but the mic only needs muting while sound is coming out.
+bool isAudible() {
+  return playing && millis() - lastSoundMs < audibleTailMs;
+}
 
 String currentClip() {
   if (!playing) return "";

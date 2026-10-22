@@ -85,7 +85,7 @@ static void micTask(void *) {
 
     if ((int32_t)(streamUntil - millis()) > 0) {
       // Half-duplex: don't send the skull's own voice to the AI.
-      if (audio::isPlaying()) memset(pcm, 0, n * 2);
+      if (audio::isAudible()) memset(pcm, 0, n * 2);
       packet[0] = 'S';
       packet[1] = 'M';
       packet[2] = seq & 0xFF;

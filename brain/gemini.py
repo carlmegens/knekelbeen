@@ -6,6 +6,7 @@ rules as the Claude pipeline in ai.py.
 """
 
 import asyncio
+import collections
 import os
 import re
 import time
@@ -184,21 +185,28 @@ def live_config(voice: str) -> types.LiveConnectConfig:
 
 
 class MicGate:
-    """Replaces quiet frames with silence, so only nearby voices reach Gemini."""
+    """Replaces quiet frames with silence, so only nearby voices reach Gemini.
+
+    The output runs PREROLL frames behind the input, so the soft start of a
+    word (before it crosses the threshold) gets through too."""
 
     HOLD = 15  # frames (300 ms) to stay open after speech
+    PREROLL = 3  # frames (60 ms)
 
     def __init__(self) -> None:
         self.threshold_db = -42.0
         self.open_for = 0
+        self.recent: collections.deque = collections.deque(maxlen=self.PREROLL + 1)
 
     def apply(self, frame: np.ndarray) -> np.ndarray:
         rms = np.sqrt(np.mean(frame.astype(np.float32) ** 2)) / 32768
         if 20 * np.log10(rms + 1e-9) > self.threshold_db:
-            self.open_for = self.HOLD
+            self.open_for = self.HOLD + self.PREROLL
         elif self.open_for:
             self.open_for -= 1
-        return frame if self.open_for else np.zeros_like(frame)
+        self.recent.append(frame)
+        out = self.recent[0]
+        return out if self.open_for else np.zeros_like(out)
 
 
 async def run_session(ws, mic_q: asyncio.Queue, speaker: ai.SkullSpeaker,
@@ -252,11 +260,12 @@ async def converse(session, mic_q, speaker, fx, gate, control, event, ws) -> Non
         batch = []
         while True:
             frame = await mic_q.get()
-            # Half-duplex: while the skull talks, Gemini hears silence.
-            if time.monotonic() < speaker.done_at + 0.3:
+            # Half-duplex: while the skull talks, Gemini hears silence. This
+            # covers the sentence; the skull itself mutes its mic until the
+            # last sound has actually left the speakers.
+            if time.monotonic() < speaker.done_at:
                 frame = np.zeros_like(frame)
-            else:
-                frame = gate.apply(frame)
+            frame = gate.apply(frame)  # always, so its pre-roll holds no stale audio
             batch.append(frame)
             if len(batch) >= SEND_EVERY:
                 data = np.concatenate(batch).tobytes()
@@ -273,7 +282,8 @@ async def converse(session, mic_q, speaker, fx, gate, control, event, ws) -> Non
         while True:
             async for resp in session.receive():
                 if resp.tool_call:
-                    await handle_tool_call(session, resp.tool_call, speaker, event)
+                    await handle_tool_call(session, resp.tool_call, speaker, event,
+                                           spoke=turn["active"])
                     continue
                 if resp.go_away is not None:
                     return  # session is about to end; reconnect
@@ -390,8 +400,14 @@ async def keyword_effects(turn, speaker, event) -> None:
     turn["scanned"] = len(turn["said"])
 
 
-async def handle_tool_call(session, tool_call, speaker, event) -> None:
-    """Run the skull's effects, timed to the speech that is already queued."""
+async def handle_tool_call(session, tool_call, speaker, event, spoke: bool) -> None:
+    """Run the skull's effects, timed to the speech that is already queued.
+
+    If the model already spoke this turn, the answer is SILENT so it doesn't
+    repeat itself. If it called the effect before saying anything, its turn
+    ends without audio, so WHEN_IDLE lets it speak (SILENT left it mute)."""
+    scheduling = (types.FunctionResponseScheduling.SILENT if spoke
+                  else types.FunctionResponseScheduling.WHEN_IDLE)
     responses = []
     for fc in tool_call.function_calls:
         effect = (fc.args or {}).get("effect")
@@ -403,8 +419,7 @@ async def handle_tool_call(session, tool_call, speaker, event) -> None:
         else:
             result = {"error": f"onbekend effect: {effect}"}
         responses.append(types.FunctionResponse(
-            id=fc.id, name=fc.name, response=result,
-            scheduling=types.FunctionResponseScheduling.SILENT))
+            id=fc.id, name=fc.name, response=result, scheduling=scheduling))
     await session.send_tool_response(function_responses=responses)
 
 

@@ -451,12 +451,23 @@ const AI={on:false};
 const AI_STATE={off:'Uit',connecting:'🔌 Verbinden…',loading:'⏳ Laden… (de eerste keer duurt even)',listening:'👂 Luistert…',
  hearing:'🗣 Hoort iemand…',thinking:'💭 Denkt na…',speaking:'💀 Spreekt…'};
 function aiShow(st){$('aiState').textContent=AI_STATE[st]||st}
-function aiConfig(){
+function aiConfig(changed){
  $('aiThrv').textContent=$('aiThr').value+' dB';
  try{localStorage.setItem('aiThr',$('aiThr').value)}catch(e){}
- if(AI.ws&&AI.ws.readyState===1)AI.ws.send(JSON.stringify({type:'config',
-  pitch:parseFloat($('pitch').value),spooky:$('spooky').checked,threshold:parseFloat($('aiThr').value),
-  voice:$('aiVoice').value||undefined}))}
+ const c={pitch:parseFloat($('pitch').value),spooky:$('spooky').checked,threshold:parseFloat($('aiThr').value),
+  voice:$('aiVoice').value||undefined};
+ if(AI.ws&&AI.ws.readyState===1)AI.ws.send(JSON.stringify({type:'config',...c}));
+ // The AI in the laptop app (skull mic, phone) takes them too, also mid-conversation.
+ if(!changed)return;
+ clearTimeout(aiConfig.t);aiConfig.t=setTimeout(()=>{
+  const p=new URLSearchParams({pitch:c.pitch,spooky:c.spooky?1:0,threshold:c.threshold});
+  if(c.voice)p.set('voice',c.voice);
+  fetch('/api/ai/headless/config?'+p).catch(()=>{})},250)}
+// Show what the laptop app's AI uses (it may have been set from another device).
+function hlSettings(s){
+ $('pitch').value=s.pitch;$('spooky').checked=s.spooky;$('aiThr').value=s.threshold;
+ if([...$('aiVoice').options].some(o=>o.value===s.voice))$('aiVoice').value=s.voice;
+ syncPitch();aiConfig()}
 function aiLog(who,text){const d=document.createElement('div');d.className='msg '+who;
  const l=document.createElement('small');l.textContent=who==='kid'?'Kind':'Schedel';
  d.append(l,document.createTextNode(text));$('aiLog').append(d);$('aiLog').scrollTop=1e9}
@@ -501,8 +512,9 @@ fetch('/api/ai').then(r=>r.json()).then(j=>{
  if(j.engine!=='gemini')return;
  let saved=null;try{saved=localStorage.getItem('aiVoice')}catch(e){}
  for(const v of j.voices){const o=document.createElement('option');o.value=o.textContent=v;$('aiVoice').append(o)}
- $('aiVoice').value=j.voices.includes(saved)?saved:j.voice;$('aiVoiceBox').hidden=false}).catch(()=>{});
-$('aiVoice').onchange=()=>{try{localStorage.setItem('aiVoice',$('aiVoice').value)}catch(e){}aiConfig()};
+ $('aiVoice').value=j.voices.includes(saved)?saved:j.voice;$('aiVoiceBox').hidden=false;
+ if(HL.settings)hlSettings(HL.settings)}).catch(()=>{});
+$('aiVoice').onchange=()=>{try{localStorage.setItem('aiVoice',$('aiVoice').value)}catch(e){}aiConfig(true)};
 let personaDefault='';
 fetch('/api/persona').then(r=>r.json()).then(j=>{$('persona').value=j.persona;personaDefault=j.default}).catch(()=>{});
 $('personaSave').onclick=async e=>{await fetch('/api/persona',{method:'POST',body:$('persona').value});flash(e.target)};
@@ -517,6 +529,7 @@ async function hlToggle(on){
 async function hlPoll(){
  let j;try{j=await (await fetch('/api/ai/headless')).json()}catch(e){return}
  if(j.mic&&document.activeElement!==$('aiMic'))$('aiMic').value=j.mic;
+ if(j.settings&&!HL.settings){HL.settings=j.settings;hlSettings(j.settings)}
  const was=HL.running;HL.running=j.running;
  if(AI.on)return;  // a browser session owns the panel
  if(j.running){

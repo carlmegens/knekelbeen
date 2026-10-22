@@ -19,6 +19,7 @@ void setPins(int bclk, int lrc, int din);
 String pins();  // JSON
 bool isPlaying();
 bool isLive();  // streaming from the laptop right now
+bool isAudible();  // sound is coming out of the speakers right now
 String currentClip();                 // file name of the playing clip, or ""
 bool isValidWav(const String &path);  // 16-bit PCM, 8-48 kHz
 

@@ -41,10 +41,20 @@ class HeadlessAI:
         self.task: asyncio.Task | None = None
         self.state = "off"
         self.log: deque = deque(maxlen=20)
+        self.live = None  # (fx, gate, control) while running
         # Voice settings; updated from the laptop page whenever it sends config.
         self.settings = {"pitch": 0.85, "spooky": True, "threshold": -42.0,
                          "voice": gemini.DEFAULT_VOICE,
                          "mic": "laptop"}  # or "skull" (INMP441 on the ESP32)
+
+    def configure(self, **settings) -> None:
+        """Change settings, also for the conversation that's running now."""
+        self.settings.update(settings)
+        if self.live:
+            fx, gate, control = self.live
+            s = self.settings
+            fx.pitch, fx.spooky, gate.threshold_db = s["pitch"], s["spooky"], s["threshold"]
+            control["voice"] = s["voice"]  # a new voice restarts the session
 
     @property
     def running(self) -> bool:
@@ -52,7 +62,7 @@ class HeadlessAI:
 
     def status(self) -> dict:
         return {"running": self.running, "state": self.state, "log": list(self.log),
-                "mic": self.settings["mic"]}
+                "mic": self.settings["mic"], "settings": self.settings}
 
     async def event(self, **msg) -> None:
         if msg.get("type") == "state":
@@ -85,6 +95,7 @@ class HeadlessAI:
         fx.pitch, fx.spooky, gate.threshold_db = s["pitch"], s["spooky"], s["threshold"]
         control = {"voice": s["voice"], "restart": False,
                    "active_voice": s["voice"], "has_history": False}
+        self.live = (fx, gate, control)
         proc = transport = None
         if s["mic"] == "skull":
             loop = asyncio.get_running_loop()
@@ -125,4 +136,5 @@ class HeadlessAI:
             if transport:
                 transport.close()
             speaker.close()
+            self.live = None
             self.state = "off"

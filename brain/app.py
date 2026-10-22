@@ -340,9 +340,24 @@ async def headless_status(_: web.Request) -> web.Response:
 
 
 async def headless_config(req: web.Request) -> web.Response:
-    mic = req.query.get("mic")
-    if mic in ("laptop", "skull"):
-        HEADLESS.settings["mic"] = mic
+    """Settings for the AI that runs in this app (skull mic or phone). They
+    apply right away, also to a conversation that is already running."""
+    q, s = req.query, {}
+    if q.get("mic") in ("laptop", "skull"):
+        s["mic"] = q["mic"]
+    try:
+        if "pitch" in q:
+            s["pitch"] = min(1.3, max(0.5, float(q["pitch"])))
+        if "threshold" in q:
+            s["threshold"] = min(-10.0, max(-70.0, float(q["threshold"])))
+    except ValueError:
+        raise web.HTTPBadRequest(text="pitch and threshold are numbers")
+    if "spooky" in q:
+        s["spooky"] = q["spooky"] == "1"
+    if q.get("voice") in gemini.VOICES:
+        s["voice"] = q["voice"]
+    if s:
+        HEADLESS.configure(**s)
         save_ai_settings()
     return web.json_response(HEADLESS.status(), headers=CORS)
 
@@ -351,14 +366,17 @@ AI_SETTINGS = ROOT / "brain" / "ai_settings.json"
 
 
 def save_ai_settings() -> None:
-    AI_SETTINGS.write_text(json.dumps({"mic": HEADLESS.settings["mic"]}))
+    AI_SETTINGS.write_text(json.dumps(HEADLESS.settings))
 
 
 def load_ai_settings() -> None:
     try:
-        HEADLESS.settings["mic"] = json.loads(AI_SETTINGS.read_text()).get("mic", "laptop")
+        saved = json.loads(AI_SETTINGS.read_text())
     except (FileNotFoundError, ValueError):
-        pass
+        return
+    if saved.get("voice") not in gemini.VOICES:
+        saved.pop("voice", None)
+    HEADLESS.settings.update({k: v for k, v in saved.items() if k in HEADLESS.settings})
 
 
 load_ai_settings()
