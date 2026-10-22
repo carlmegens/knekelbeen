@@ -9,3 +9,20 @@ durf     | Wie durft er dichterbij te komen? <short pause> Jij? <short pause> Of
 dag      | Ga maar gauw verder, kleine monsters. <short pause> Er wachten nog meer huizen op jullie! | hartelijk en ondeugend
 botlied_zang | Het teenbot zit vast aan het voetbot, het voetbot zit vast aan het enkelbot, het enkelbot zit vast aan het scheenbot, het scheenbot zit vast aan het kniebot! <short pause> Rammel, rammel, hoor die botten, klapper, klapper, kaak en knoken! | vrolijk en ritmisch zingend, als een griezelig kinderliedje
 botlied_einde | Maar wacht eens even... <long pause> Ik heb alleen nog maar een schedel! <sigh> Waar is de rest van mij gebleven?! <short pause> Mwoehahaha! | eerst verbaasd, dan dramatisch geschrokken, eindigend met een griezelige lach
+# --- extra set, 22 okt ---
+psst      | Psst... <short pause> Hé jij daar! <short pause> Ja, jij! <long pause> Kom eens wat dichterbij... ik wil je een geheimpje vertellen. | fluisterend en samenzweerderig
+groepje   | Wat een groot groepje monsters! <short pause> Zijn jullie allemaal gekomen om mij te bezoeken? <sigh> Wat lief. | verrast en ontroerd, een beetje overdreven
+nogeen    | Nog een snoepje? <long pause> Ik zag dat wel, hoor. <short pause> Mijn oogkassen zijn leeg, maar ik zie álles. | traag, laag en dreigend
+rammel    | Hoor je mijn botten rammelen? <short pause> Rammel, rammel, rammel! <short pause> Dat doen ze altijd als ik honger heb... | griezelig en plagerig
+kietel    | Hihihi, niet aan mijn kaak zitten! <short pause> Daar ben ik kietelig! | giechelig en verlegen
+hoofdpijn | Au, au, au... <sigh> Ik heb zó'n hoofdpijn. <short pause> Nou ja... ik bén eigenlijk alleen maar hoofd. | klagerig, dan droog en grappig
+koud      | Brrr, wat is het koud vannacht! <short pause> Ik heb geen vel meer om kippenvel op te krijgen. | rillend en klagend
+spinnen   | Er woont een spin in mijn neusgat. <short pause> Hij heet Henk. <long pause> Zeg maar dag tegen Henk. | droog en serieus, alsof het heel normaal is
+volle_maan | Kijk eens naar de maan... <long pause> Bij volle maan word ik altijd een beetje... <short pause> raar. Mwoehaha! | dromerig, eindigend met een gekke lach
+niemand   | Hallo? <long pause> Is daar iemand? <long pause> Het is zo stil... <sigh> Honderd jaar en nog steeds niemand om mee te kletsen. | eenzaam en zacht, een beetje zielig
+schrik    | BOE! <short pause> Hahaha, ben je geschrokken? <short pause> Ik ook een beetje, eerlijk gezegd. | eerst hard en plotseling, dan lachend en verlegen
+tanden    | Kijk eens naar mijn tanden! <short pause> Ik poets ze elke dag. <short pause> Nou ja... elke eeuw. | trots, daarna ondeugend
+dapper    | Jij bent wel heel dapper, dat je zo dicht bij mij durft te komen. <short pause> De meeste kinderen rennen al gillend weg! | onder de indruk en hartelijk
+ouders    | En de grote mensen daar achteraan... <short pause> Jullie mogen ook wel een snoepje. <long pause> Als je durft. | sluw en uitnodigend
+tot_ziens | Tot volgend jaar, kleine griezels! <short pause> Ik ben er nog. <long pause> Ik ben er áltijd nog... | eerst vrolijk, dan langzaam en spookachtig
+gaap      | <sigh> Hoaah... <short pause> Ben ik in slaap gevallen? <short pause> Hoe laat is het? <short pause> O ja. Spooktijd! | slaperig, dan ineens wakker en enthousiast
