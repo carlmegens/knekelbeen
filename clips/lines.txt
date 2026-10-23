@@ -26,3 +26,4 @@ dapper    | Jij bent wel heel dapper, dat je zo dicht bij mij durft te komen. <s
 ouders    | En de grote mensen daar achteraan... <short pause> Jullie mogen ook wel een snoepje. <long pause> Als je durft. | sluw en uitnodigend
 tot_ziens | Tot volgend jaar, kleine griezels! Ik ben er nog... ... Ik ben er áltijd nog... | eerst vrolijk, dan na een lange stilte langzaam en spookachtig
 gaap      | <sigh> Hoaah... <short pause> Ben ik in slaap gevallen? <short pause> Hoe laat is het? <short pause> O ja. Spooktijd! | slaperig, dan ineens wakker en enthousiast
+buik      | Pak maar één snoepje! <short pause> Van te veel snoepjes krijg je buikpijn! <short pause> Tenminste... <short pause> dat heb ik van horen zeggen... <sigh> Ik heb geen buik. | eerst streng en wijs, dan aarzelend, eindigend droog en een beetje zielig
