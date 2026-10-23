@@ -281,8 +281,9 @@ static void onLivePacket(AsyncUDPPacket &p) {
   liveHead = h + n;
 }
 
-// Plays any source through the jaw-sync pipeline.
-static void playSource(Source &src) {
+// Plays any source through the jaw-sync pipeline. mouth=false: sound effects
+// (fx_*.wav, a ticking clock) leave the jaw and everything following it still.
+static void playSource(Source &src, bool mouth = true) {
   const uint32_t rate = src.rate();
   setRate(rate);
   const int blockN = rate / 100;  // 10 ms of samples
@@ -310,7 +311,8 @@ static void playSource(Source &src) {
     }
     if (n < blockN) memset(mono + n, 0, (blockN - n) * 2);  // pad / drain
 
-    jaw::setTarget(ended ? 0 : env.update(mono, blockN));
+    float open = env.update(mono, blockN);
+    jaw::setTarget(ended || !mouth ? 0 : open);
 
     head = (head + 1) % (leadBlocks + 1);
     if (!ended) filled = min(filled + 1, leadBlocks + 1);
@@ -321,6 +323,11 @@ static void playSource(Source &src) {
   vTaskDelay(pdMS_TO_TICKS(dmaMs));
   i2s_zero_dma_buffer(PORT);
   jaw::setTarget(0);
+}
+
+// Sound effects are named fx_*.wav: no jaw, and not picked by "Spreek".
+static bool isEffect(const String &path) {
+  return path.substring(path.lastIndexOf('/') + 1).startsWith("fx_");
 }
 
 static void playOne(const String &path) {
@@ -338,7 +345,7 @@ static void playOne(const String &path) {
     Serial.printf("Can't play %s\n", path.c_str());
     return;
   }
-  playSource(file);
+  playSource(file, !isEffect(path));
 }
 
 static void audioTask(void *) {
@@ -407,7 +414,8 @@ bool playRandom() {
   File dir = storage::clips().open("/clips");
   std::vector<String> names;
   for (File f = dir.openNextFile(); f; f = dir.openNextFile())
-    if (String(f.name()).endsWith(".wav")) names.push_back(f.name());
+    if (String(f.name()).endsWith(".wav") && !isEffect(f.name()))
+      names.push_back(f.name());
   if (names.empty()) return false;
   static int last = -1;
   int i = random(names.size());

@@ -24,10 +24,25 @@
  #status{margin:.6em 0;color:var(--muted)} #status.err{color:var(--err)}
  #now{color:var(--accent);margin:.6em 0;font-weight:600}
  #now:empty,#status:empty{display:none}
- .clip{display:flex;align-items:center;gap:.3em;padding:.15em .4em;border-radius:6px;border-left:3px solid transparent}
- .clip.playing{background:var(--playing);border-left-color:var(--accent)}
- .clip span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- .clip .danger{margin-left:1em}
+ .cat{font-size:.85em;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:1.6em 0 .2em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+ .board{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:.5em;margin:.3em 0 .8em}
+ .board .clip{margin:0;min-height:64px;padding:.4em .2em;background:var(--neutral);color:var(--fg);font-size:.9em;font-weight:600;line-height:1.2;overflow-wrap:break-word;border:2px solid transparent}
+ .board .clip:hover{border-color:var(--accent)}
+ .board .ic{display:block;font-size:1.3em;line-height:1.1}
+ .board .clip.playing{background:var(--accent);color:var(--on-accent)}
+ #clips.editing .clip{background:var(--danger);color:#fff}
+ #clips h3{font-size:1em;margin:.8em 0 .3em;color:var(--accent)}
+ @media(min-width:900px){
+  body{max-width:1280px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:0 1.2em;align-items:start}
+  .cols>.wide{grid-column:1/-1}
+  .cols[hidden]{display:none}
+  .cols{grid-auto-rows:4px}
+  .cols>.tall,.cols>.span2{grid-column:span 2}
+  .tall>.body,.span2>.body,.grp.tall{column-count:2;column-gap:2em}
+  .tall>.body>*,.span2>.body>*,.grp.tall>*{break-inside:avoid}
+  .grp.tall>h3{column-span:all}
+ }
  .row{display:flex;align-items:center;gap:.5em;flex-wrap:wrap}
  .saved{color:var(--accent);margin-left:.4em}
  dialog{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;max-width:340px}
@@ -45,6 +60,8 @@
  .dim{opacity:.4}
  header.top{display:flex;align-items:center;justify-content:space-between;gap:.5em}
  header.top h1{margin:.2em 0}
+ header.top button{margin-right:0}
+ @media(max-width:420px){header.top h1{font-size:1.4em}}
  input[type=color]{width:3em;height:44px;padding:0;border:1px solid var(--line);border-radius:6px;background:#222}
  input[type=number]{width:5em}
  #aiBtn.on{background:var(--danger);color:#fff}
@@ -61,10 +78,10 @@
 </style></head><body>
 <header class="top"><h1>&#128128; Schedelbediening</h1>
  <button id="settingsBtn" class="sm neutral" aria-label="Instellingen">&#9881; Instellingen</button></header>
-<main id="viewMain">
-<button id="speak" class="primary">&#128123; Spreek</button>
-<div id="now"></div>
-<div id="status" role="status"></div>
+<main id="viewMain" class="cols">
+<button id="speak" class="primary wide">&#128123; Spreek</button>
+<div id="now" class="wide"></div>
+<div id="status" class="wide" role="status"></div>
 
 <details class="panel" id="sec-ai" open><summary>AI-schedel</summary>
  <button id="aiBtn" class="primary">&#129302; AI-schedel starten</button>
@@ -103,21 +120,24 @@
  <span id="sendhint" class="help">Neem eerst een clip op.</span>
 </details>
 
-<details class="panel" id="sec-clips" open><summary>Clips</summary>
+<details class="panel wide" id="sec-clips" open><summary>Soundboard</summary>
  <div id="clips"></div>
  <label>Volume <span id="volv"></span>
   <input id="vol" type="range" min="0" max="100" aria-label="Volume"></label>
  <div class="row">
   <button class="sm" onclick="$('file').click()">Geluid uploaden</button>
   <button class="sm neutral" onclick="loadClips()">Vernieuwen</button>
+  <button id="clipEdit" class="sm neutral" onclick="toggleEdit()">Verwijderen…</button>
   <span id="free" class="help"></span></div>
- <span class="help">WAV, MP3, M4A… wordt automatisch omgezet voor de schedel.</span>
+ <span class="help">WAV, MP3, M4A… wordt automatisch omgezet voor de schedel. Begint de naam met fx_, dan komt hij bij de geluidseffecten en beweegt de kaak niet mee.</span>
  <input id="file" type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg" multiple hidden>
 </details>
 </main>
 
-<div id="viewSettings" hidden>
+<div id="viewSettings" class="cols" hidden>
 
+<h2 class="cat wide">&#128264; Geluid en stem</h2>
+<div class="stack">
 <details class="panel" id="sec-stem" open><summary>Stem</summary>
  <label><input id="spooky" type="checkbox" checked> Spooky effect</label>
  <label id="pitchbox">Toonhoogte
@@ -125,8 +145,12 @@
   <span class="ends"><span>Dieper</span><span>Normaal</span></span></label>
  <span class="help">Geldt voor de AI-schedel, live praten en nieuwe opnames.</span>
 </details>
-
-<details class="panel" id="sec-aiset" open><summary>AI-schedel</summary>
+<details class="panel" id="sec-amps"><summary>Versterkers</summary>
+ <label><input id="aSleep" type="checkbox"> Uit als er niets speelt
+  <span class="help">Voorkomt brommen en ruisen in stilte. Zet dit uit als het begin van een zin wegvalt.</span></label>
+</details>
+</div>
+<details class="panel span2" id="sec-aiset" open><summary>AI-schedel</summary>
  <label id="aiVoiceBox" hidden>Stem van de schedel
   <select id="aiVoice" aria-label="Stem van de schedel"></select>
   <span class="help">Gemini-stem; het spooky effect uit Stem komt er nog overheen. Knekelbeen is de ontworpen stem uit de clips: mooier, maar hij reageert wat later en elke zin kost tegoed.</span></label>
@@ -145,7 +169,7 @@
    <button class="sm neutral" id="personaDefault">Standaard herstellen</button></div>
  </details>
 </details>
-
+<h2 class="cat wide">&#128128; Kaak</h2>
 <details class="panel" id="sec-sync"><summary>Kaaksynchronisatie</summary>
  <label>Ruisdrempel <input id="sGate" type="number">
   <span class="help">Hoger negeert zachte geluiden en achtergrondruis.</span></label>
@@ -160,7 +184,6 @@
  <div class="row"><button class="sm" onclick="saveSync(this)">Opslaan</button>
   <button class="sm neutral" onclick="api('tone')">Testtoon</button></div>
 </details>
-
 <details class="panel" id="sec-jaw"><summary>Kaakpositie</summary>
  <label>Kaak <span id="sPosv">0</span>% open
   <input id="sPos" type="range" min="0" max="100" value="0" aria-label="Kaakpositie"></label>
@@ -168,7 +191,15 @@
   <button class="sm neutral" onclick="setPos(100)">Open</button>
   <button class="sm neutral" onclick="api('chatter?ms=3000')">Klapperen (3 s)</button></div>
 </details>
-
+<details class="panel" id="sec-servo"><summary>Servohoeken</summary>
+ <div class="row"><label style="margin:0">Dicht <input id="sC" type="number" min="0" max="180"></label>
+  <button class="sm neutral" onclick="api('raw?deg='+$('sC').value)">Test</button></div>
+ <div class="row"><label style="margin:0">Open <input id="sO" type="number" min="0" max="180"></label>
+  <button class="sm neutral" onclick="api('raw?deg='+$('sO').value)">Test</button></div>
+ <span class="help">Tik op Test om de servo naar die hoek te bewegen. Zoek waar de kaak net dicht is en waar hij helemaal open is, en sla op.</span>
+ <button class="sm" onclick="saveCal(this)">Opslaan</button>
+</details>
+<h2 class="cat wide">&#128161; Lichten</h2>
 <details class="panel" id="sec-eyes"><summary>Ogen</summary>
  <div class="row"><label style="margin:0">Kleur <input id="eyeColor" type="color" value="#ff2000" aria-label="Kleur van de ogen"></label>
   <select id="eyeMode" aria-label="Werking van de ogen">
@@ -179,7 +210,6 @@
  <div class="row"><button class="sm" onclick="saveEyes(this)">Opslaan</button>
   <button class="sm neutral" onclick="api('eyes?flash=1')">Flits</button></div>
 </details>
-
 <details class="panel" id="sec-candles"><summary>Kaarsen</summary>
  <div class="row"><label style="margin:0">Aantal <input id="cCount" type="number" min="1" max="20"></label>
   <label style="margin:0">Kleurvolgorde <select id="cOrder" aria-label="Kleurvolgorde">
@@ -200,7 +230,17 @@
   <button class="sm neutral" onclick="api('candles?effect=flare')">Opflakkeren</button>
   <button class="sm neutral" onclick="api('candles?effect=ghost')">Spookgroen</button></div>
 </details>
-
+<details class="panel" id="sec-led2"><summary>LED 2</summary>
+ <div class="row"><label style="margin:0">Aantal <input id="lCount" type="number" min="1" max="60"></label>
+  <label style="margin:0">Kleur <input id="lColor" type="color" value="#ff2000" aria-label="Kleur van LED 2"></label></div>
+ <div class="row"><select id="lMode" aria-label="Werking van LED 2">
+   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="2">Uit</option></select></div>
+ <label>Helderheid <span id="lBv"></span>
+  <input id="lB" type="range" min="0" max="100" aria-label="Helderheid van LED 2"></label>
+ <span class="help">Een WS2812-ledje of -strip op de LED 2-aansluiting, bijvoorbeeld in een lantaarn of ketel.</span>
+ <button class="sm" onclick="saveLed2(this)">Opslaan</button>
+</details>
+<h2 class="cat wide">&#128064; Beweging</h2>
 <details class="panel" id="sec-turn"><summary>Hoofd draaien</summary>
  <label><input id="tOn" type="checkbox"> Draaiservo aan
   <span class="help">Uit: de servo op DRAAI krijgt geen signaal en blijft slap. Zet hem pas aan als de nek gemonteerd is.</span></label>
@@ -216,7 +256,6 @@
   <button class="sm neutral" onclick="api('turn?pos=100')">Rechts</button></div>
  <span class="help">Sla eerst op, dan werken Links, Midden en Rechts met de nieuwe waarden.</span>
 </details>
-
 <details class="panel" id="sec-pir"><summary>Bewegingssensor</summary>
  <label><input id="pOn" type="checkbox"> Begroeten bij beweging
   <span class="help">Als de sensor iemand ziet, flitsen de ogen en begroet de AI-schedel de bezoekers met een nieuw gesprek.</span></label>
@@ -226,31 +265,6 @@
  <div class="row"><button class="sm" onclick="savePir(this)">Opslaan</button>
   <button class="sm neutral" onclick="api('pir?test=1');setTimeout(pirPoll,2500)">Test</button></div>
  <span class="help">Test doet alsof er iemand aankomt. Staat de AI-schedel aan, dan begroet hij je.</span>
-</details>
-
-<details class="panel" id="sec-led2"><summary>LED 2</summary>
- <div class="row"><label style="margin:0">Aantal <input id="lCount" type="number" min="1" max="60"></label>
-  <label style="margin:0">Kleur <input id="lColor" type="color" value="#ff2000" aria-label="Kleur van LED 2"></label></div>
- <div class="row"><select id="lMode" aria-label="Werking van LED 2">
-   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="2">Uit</option></select></div>
- <label>Helderheid <span id="lBv"></span>
-  <input id="lB" type="range" min="0" max="100" aria-label="Helderheid van LED 2"></label>
- <span class="help">Een WS2812-ledje of -strip op de LED 2-aansluiting, bijvoorbeeld in een lantaarn of ketel.</span>
- <button class="sm" onclick="saveLed2(this)">Opslaan</button>
-</details>
-
-<details class="panel" id="sec-amps"><summary>Versterkers</summary>
- <label><input id="aSleep" type="checkbox"> Uit als er niets speelt
-  <span class="help">Voorkomt brommen en ruisen in stilte. Zet dit uit als het begin van een zin wegvalt.</span></label>
-</details>
-
-<details class="panel" id="sec-servo"><summary>Servohoeken</summary>
- <div class="row"><label style="margin:0">Dicht <input id="sC" type="number" min="0" max="180"></label>
-  <button class="sm neutral" onclick="api('raw?deg='+$('sC').value)">Test</button></div>
- <div class="row"><label style="margin:0">Open <input id="sO" type="number" min="0" max="180"></label>
-  <button class="sm neutral" onclick="api('raw?deg='+$('sO').value)">Test</button></div>
- <span class="help">Tik op Test om de servo naar die hoek te bewegen. Zoek waar de kaak net dicht is en waar hij helemaal open is, en sla op.</span>
- <button class="sm" onclick="saveCal(this)">Opslaan</button>
 </details>
 </div>
 
@@ -272,7 +286,7 @@ function say(t,err){const s=$('status');s.textContent=t||'';s.className=err?'err
 async function api(p,opt){
  try{const r=await fetch(B+p,opt);if(r.status==502)throw new Error('offline');if(offline){offline=false;say('')}return r}
  catch(e){offline=true;say(MSG.offline,true);throw e}}
-const pretty=n=>n.replace(/\.wav$/i,'').replace(/_/g,' ');
+const pretty=n=>{const s=n.replace(/\.wav$/i,'').replace(/^fx_/,'').replace(/_/g,' ');return s.charAt(0).toUpperCase()+s.slice(1)};
 function flash(btn){const s=document.createElement('span');s.className='saved';s.textContent='Opgeslagen';
  btn.after(s);setTimeout(()=>s.remove(),2000)}
 function ask(title,body,ok,no){return new Promise(res=>{const d=$('dlg');
@@ -291,23 +305,36 @@ async function poll(){
  }catch(e){}}
 setInterval(poll,1000);
 
-// ---- clips ----
+// ---- clips: soundboard ----
+// Files named fx_* are sound effects: their own group, no jaw (firmware).
+const FX_ICON={tiktak:'🕰️',klokslag:'🔔',middernacht:'🌙',klokkenspel:'🎶',donder:'⛈️',
+ wind:'🌬️',hartslag:'💓',kraak:'🚪',uil:'🦉'};
+let editing=false;
+function toggleEdit(){editing=!editing;$('clipEdit').textContent=editing?'Klaar':'Verwijderen…';
+ $('clips').classList.toggle('editing',editing);say(editing?'Tik op een knop om die clip te verwijderen.':'')}
 async function loadClips(){
  let j;try{j=await (await api('clips')).json()}catch(e){return}
+ j.clips.sort((a,b)=>a.name.localeCompare(b.name));
  clipNames=j.clips.map(c=>c.name);const box=$('clips');box.innerHTML='';
  if(!j.clips.length){const p=document.createElement('p');p.className='help';p.textContent=MSG.empty;box.append(p)}
- for(const c of j.clips){
-  const d=document.createElement('div');d.className='clip';d.dataset.name=c.name;
-  const n=document.createElement('span');n.textContent=pretty(c.name);
-  const p=document.createElement('button');p.className='sm';p.textContent='Speel';
-  p.setAttribute('aria-label','Speel '+pretty(c.name));
-  p.onclick=async()=>{await api('play?f='+encodeURIComponent(c.name));poll()};
-  const x=document.createElement('button');x.className='sm danger';x.textContent='✕';
-  x.setAttribute('aria-label','Verwijder '+pretty(c.name));
-  x.onclick=async()=>{if(await ask('“'+pretty(c.name)+'” verwijderen?',
-    'De clip wordt van de schedel verwijderd. Dit kun je niet ongedaan maken.','Clip verwijderen','Behouden')){
-    await api('delete?f='+encodeURIComponent(c.name));loadClips()}};
-  d.append(n,p,x);box.append(d)}
+ const fx=c=>c.name.startsWith('fx_');
+ for(const [title,list] of [['Stem',j.clips.filter(c=>!fx(c))],['Geluidseffecten',j.clips.filter(fx)]]){
+  if(!list.length)continue;
+  const h=document.createElement('h3');h.textContent=title;
+  const g=document.createElement('div');g.className='board';
+  for(const c of list){
+   const b=document.createElement('button');b.className='clip';b.dataset.name=c.name;
+   const icon=FX_ICON[c.name.replace(/^fx_|\.wav$/gi,'')];
+   if(icon){const i=document.createElement('span');i.className='ic';i.textContent=icon;b.append(i)}
+   b.append(pretty(c.name));b.title='Speel '+pretty(c.name);
+   b.onclick=async()=>{
+    if(editing){if(await ask('“'+pretty(c.name)+'” verwijderen?',
+      'De clip wordt van de schedel verwijderd. Dit kun je niet ongedaan maken.','Clip verwijderen','Behouden')){
+      await api('delete?f='+encodeURIComponent(c.name));loadClips()}return}
+    // A second tap on the playing one stops it.
+    await api(b.classList.contains('playing')?'stop':'play?f='+encodeURIComponent(c.name));poll()};
+   g.append(b)}
+  box.append(h,g)}
  if($('free')){const g=j.free>=1073741824,v=g?j.free/1073741824:j.free/1048576;
   $('free').textContent=v.toFixed(1).replace('.',',')+(g?' GB':' MB')+' vrij'+(j.storage==='sd'?' op de SD-kaart':' in het geheugen')}
  poll()}
@@ -632,4 +659,30 @@ document.querySelectorAll('details.panel').forEach(d=>{
  try{const v=localStorage.getItem(d.id);if(v!==null)d.open=v==='1'}catch(e){}
  d.ontoggle=()=>{try{localStorage.setItem(d.id,d.open?'1':'0')}catch(e){}}});
 freshName();syncPitch();loadClips();
+
+// ---- wide screens: masonry, and long boxes go two columns wide ----
+// Each box spans as many 4 px grid rows as it is tall, so short boxes don't
+// leave holes; a box taller than most of the screen spans two columns and
+// lays its own content out in two columns.
+for(const d of document.querySelectorAll('.cols>details')){
+ const b=document.createElement('div');b.className='body';
+ b.append(...[...d.childNodes].filter(n=>n.nodeName!=='SUMMARY'));d.append(b)}
+function layout(){
+ for(const g of document.querySelectorAll('.cols')){
+  const grid=getComputedStyle(g).display==='grid';
+  const ncol=grid?getComputedStyle(g).gridTemplateColumns.split(' ').length:1;
+  for(const el of g.children){
+   if(!grid){el.style.gridRowEnd='';el.classList.remove('tall');continue}
+   if(!el.matches('.wide,.span2')){
+    const was=el.classList.contains('tall');el.classList.remove('tall');
+    const tall=ncol>=2&&el.offsetHeight>innerHeight*.75;
+    el.classList.toggle('tall',tall);
+    if(tall!==was)el.style.gridRowEnd=''}
+   const cs=getComputedStyle(el);
+   const h=el.offsetHeight+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom);
+   el.style.gridRowEnd=h?'span '+Math.ceil(h/4):''}}}
+let layoutQ=0;const relayout=()=>{if(!layoutQ)layoutQ=requestAnimationFrame(()=>{layoutQ=0;layout()})};
+const ro=new ResizeObserver(relayout);
+document.querySelectorAll('.cols>*').forEach(el=>ro.observe(el));
+addEventListener('resize',relayout);relayout();
 </script></body></html>
