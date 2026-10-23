@@ -1,0 +1,9 @@
+# Opvul-geluidjes voor de Knekelbeen-stem (niet voor de SD-kaart): speelt
+# meteen af terwijl hij over zijn antwoord nadenkt.
+#   tools/gemini_clip.py --batch clips/denk.txt --rate 24000
+# Daarna 10 dB zachter (ffmpeg -af volume=-10dB), zo hard als de live stem.
+denk_hmm   | Hmmm... | nadenkend, laag en krakend
+denk_ahh   | Ahhh... | geheimzinnig en zacht, alsof hij iets interessants hoort
+denk_kijken | Eens kijken... | traag en nadenkend
+denk_hehe  | Hehehe... | zacht griezelig gegniffel
+denk_tja   | Tja... | droog en nadenkend

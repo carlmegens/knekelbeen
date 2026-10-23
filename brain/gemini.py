@@ -50,6 +50,10 @@ def current_model() -> str:
     return MODEL
 DEFAULT_VOICE = os.environ.get("SKULL_GEMINI_VOICE", "Charon")
 VOICES = ["Charon", "Fenrir", "Orus", "Puck", "Kore", "Aoede", "Leda", "Zephyr"]
+# Knekelbeen's own Voice Design voice. Live can't use it, so picking it runs
+# the slower Flash + TTS pipeline in designed.py instead.
+DESIGNED_VOICE = "Knekelbeen"
+VOICES_ALL = VOICES + [DESIGNED_VOICE]
 GEMINI_RATE = 24000
 SEND_EVERY = 2  # mic frames (20 ms) per message to Gemini
 
@@ -221,6 +225,18 @@ async def run_session(ws, mic_q: asyncio.Queue, speaker: ai.SkullSpeaker,
     while not ws.closed:
         voice = control["voice"]
         control["restart"] = False
+        if voice == DESIGNED_VOICE:
+            import designed  # imports this module, so not at the top
+            control["active_voice"] = voice
+            try:
+                await designed.run(ws, mic_q, speaker, fx, gate, control, event)
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                await event(type="error", text=gemini_error_text(e))
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, 30)
+            continue
         model = current_model()
         try:
             await event(type="state", state="connecting")
@@ -440,6 +456,8 @@ def gemini_error_text(e: Exception) -> str:
         return "Gemini weigert de API-sleutel. Controleer GEMINI_API_KEY in .env."
     if "not found" in low or "404" in msg or "model" in low and "support" in low:
         return f"Gemini-model '{current_model()}' niet gevonden. Zet een ander model in SKULL_GEMINI_MODEL."
+    if "402" in msg or "prepayment" in low or "credits are depleted" in low:
+        return "Het Gemini-tegoed is op. Waardeer het op in AI Studio (Billing)."
     if "quota" in low or "429" in msg or "resource" in low:
         return "Gemini-limiet bereikt. Wacht even; de schedel probeert het opnieuw."
     return f"Gemini-verbinding verbroken ({msg[:120]}). Opnieuw verbinden…"

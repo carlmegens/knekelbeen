@@ -129,7 +129,7 @@
 <details class="panel" id="sec-aiset" open><summary>AI-schedel</summary>
  <label id="aiVoiceBox" hidden>Stem van de schedel
   <select id="aiVoice" aria-label="Stem van de schedel"></select>
-  <span class="help">Gemini-stem; het spooky effect uit Stem komt er nog overheen.</span></label>
+  <span class="help">Gemini-stem; het spooky effect uit Stem komt er nog overheen. Knekelbeen is de ontworpen stem uit de clips: mooier, maar hij reageert wat later en elke zin kost tegoed.</span></label>
  <label>Microfoon
   <select id="aiMic" aria-label="Microfoon voor de AI">
    <option value="laptop">Laptop</option><option value="skull">Schedel (INMP441)</option></select>
@@ -511,7 +511,8 @@ $('aiThr').oninput=aiConfig;$('pitch').addEventListener('change',aiConfig);$('sp
 fetch('/api/ai').then(r=>r.json()).then(j=>{
  if(j.engine!=='gemini')return;
  let saved=null;try{saved=localStorage.getItem('aiVoice')}catch(e){}
- for(const v of j.voices){const o=document.createElement('option');o.value=o.textContent=v;$('aiVoice').append(o)}
+ for(const v of j.voices){const o=document.createElement('option');o.value=v;
+  o.textContent=v==='Knekelbeen'?'Knekelbeen (eigen stem, iets trager)':v;$('aiVoice').append(o)}
  $('aiVoice').value=j.voices.includes(saved)?saved:j.voice;$('aiVoiceBox').hidden=false;
  if(HL.settings)hlSettings(HL.settings)}).catch(()=>{});
 $('aiVoice').onchange=()=>{try{localStorage.setItem('aiVoice',$('aiVoice').value)}catch(e){}aiConfig(true)};

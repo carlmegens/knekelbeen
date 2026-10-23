@@ -39,6 +39,7 @@ def load_env() -> None:
 load_env()
 import ai  # noqa: E402  (needs the environment loaded first)
 import gemini  # noqa: E402
+import designed  # noqa: E402
 import headless  # noqa: E402
 CLIPS = ROOT / "clips"
 RAW = CLIPS / "raw"
@@ -234,7 +235,7 @@ async def gemini_ws(req: web.Request) -> web.WebSocketResponse:
                     fx.pitch = min(1.3, max(0.5, float(data.get("pitch", 0.85))))
                     fx.spooky = bool(data.get("spooky", True))
                     gate.threshold_db = float(data.get("threshold", -42))
-                    if data.get("voice") in gemini.VOICES:
+                    if data.get("voice") in gemini.VOICES_ALL:
                         control["voice"] = data["voice"]
                     # Remember for the headless AI (started from the skull page).
                     HEADLESS.settings.update(pitch=fx.pitch, spooky=fx.spooky,
@@ -354,7 +355,7 @@ async def headless_config(req: web.Request) -> web.Response:
         raise web.HTTPBadRequest(text="pitch and threshold are numbers")
     if "spooky" in q:
         s["spooky"] = q["spooky"] == "1"
-    if q.get("voice") in gemini.VOICES:
+    if q.get("voice") in gemini.VOICES_ALL:
         s["voice"] = q["voice"]
     if s:
         HEADLESS.configure(**s)
@@ -374,7 +375,7 @@ def load_ai_settings() -> None:
         saved = json.loads(AI_SETTINGS.read_text())
     except (FileNotFoundError, ValueError):
         return
-    if saved.get("voice") not in gemini.VOICES:
+    if saved.get("voice") not in gemini.VOICES_ALL:
         saved.pop("voice", None)
     HEADLESS.settings.update({k: v for k, v in saved.items() if k in HEADLESS.settings})
 
@@ -556,8 +557,9 @@ async def persona(req: web.Request) -> web.Response:
 
 async def ai_status(_: web.Request) -> web.Response:
     if gemini.has_key():
+        voices = gemini.VOICES_ALL if designed.available() else gemini.VOICES
         return web.json_response({"has_key": True, "engine": "gemini",
-                                  "model": gemini.MODEL, "voices": gemini.VOICES,
+                                  "model": gemini.MODEL, "voices": voices,
                                   "voice": gemini.DEFAULT_VOICE})
     has_key = bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
     return web.json_response({"has_key": has_key, "engine": "claude", "model": ai.MODEL,
