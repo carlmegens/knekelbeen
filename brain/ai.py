@@ -28,6 +28,7 @@ WHISPER_SIZE = os.environ.get("SKULL_WHISPER", "small")  # "base" is ~3x faster
 VOICE_PATH = ROOT / "voices" / "nl_NL-pim-medium.onnx"
 PERSONA_FILE = ROOT / "brain" / "persona.txt"
 JOKES_FILE = ROOT / "brain" / "jokes.txt"
+LINES_FILE = ROOT / "clips" / "lines.txt"  # the scripted clips
 
 MIC_RATE = 16000
 FRAME = 320  # 20 ms at 16 kHz
@@ -84,6 +85,27 @@ def load_persona() -> str:
         return text or DEFAULT_PERSONA
     except FileNotFoundError:
         return DEFAULT_PERSONA
+
+
+def load_examples(n: int = 12) -> str:
+    """A random handful of the clip lines, as a style guide: these are the
+    voice we want (dry, silly, a bit sorry for himself), not lines to recite."""
+    try:
+        rows = [l.split("|") for l in LINES_FILE.read_text().splitlines()
+                if l.strip() and not l.lstrip().startswith("#") and "|" in l]
+    except FileNotFoundError:
+        return ""
+    texts = [re.sub(r"\s{2,}", " ", re.sub(r"<[^>]*>", " ", r[1])).strip() for r in rows]
+    texts = [t for t in texts if 0 < len(t) < 200]  # skip the song
+    random.shuffle(texts)
+    return ("\n\nZo klink jij. Dit zijn zinnen uit je eigen opnames; herhaal ze niet "
+            "letterlijk, maar praat in deze stijl:\n"
+            + "\n".join(f"- {t}" for t in texts[:n])
+            + "\n\nVerder heb je vrije hand. Verzin zelf grappige details over je "
+            "leven in de klok, in dezelfde geest. Reageer op wat de kinderen zeggen "
+            "of aanhebben, stel af en toe een vraag terug en maak flauwe "
+            "botten-woordgrapjes. Alleen moppen (vraag en antwoord) komen uit de lijst "
+            "hieronder.")
 
 
 def load_jokes(shuffle: bool = False) -> str:
@@ -273,7 +295,7 @@ class Conversation:
 
     async def reply(self, brain: Brain, text: str):
         """Yields reply sentences as Claude streams them."""
-        system = [{"type": "text", "text": load_persona() + RULES + load_jokes(),
+        system = [{"type": "text", "text": load_persona() + RULES + load_examples() + load_jokes(),
                    "cache_control": {"type": "ephemeral"}}]
         messages = self.history() + [{"role": "user", "content": text}]
         buf = ""

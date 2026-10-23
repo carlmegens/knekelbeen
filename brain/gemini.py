@@ -172,7 +172,7 @@ def live_config(voice: str) -> types.LiveConnectConfig:
     return types.LiveConnectConfig(
         response_modalities=["AUDIO"],
         system_instruction=(ai.load_persona() + ai.RULES + LANGUAGE_RULE
-                            + EFFECT_RULE + ai.load_jokes(shuffle=True)),
+                            + EFFECT_RULE + ai.load_examples() + ai.load_jokes(shuffle=True)),
         tools=[EFFECT_TOOL],
         speech_config=types.SpeechConfig(voice_config=types.VoiceConfig(
             prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice))),

@@ -120,7 +120,7 @@ class Chat:
         self.last = 0.0
         # Shuffled once per visit, like a fresh Live session.
         self.system = (ai.load_persona() + ai.RULES + gemini.LANGUAGE_RULE
-                       + STYLE_RULE + ai.load_jokes(shuffle=True))
+                       + STYLE_RULE + ai.load_examples() + ai.load_jokes(shuffle=True))
 
     def add(self, heard: str, said: str) -> None:
         self.turns += [types.Content(role="user", parts=[types.Part(text=heard or "...")]),
