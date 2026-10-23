@@ -24,5 +24,5 @@ schrik    | BOE! <short pause> Hahaha, ben je geschrokken? <short pause> Ik ook 
 tanden    | Kijk eens naar mijn tanden! <short pause> Ik poets ze elke dag. <short pause> Nou ja... elke eeuw. | trots, daarna ondeugend
 dapper    | Jij bent wel heel dapper, dat je zo dicht bij mij durft te komen. <short pause> De meeste kinderen rennen al gillend weg! | onder de indruk en hartelijk
 ouders    | En de grote mensen daar achteraan... <short pause> Jullie mogen ook wel een snoepje. <long pause> Als je durft. | sluw en uitnodigend
-tot_ziens | Tot volgend jaar, kleine griezels! <short pause> Ik ben er nog. <long pause> Ik ben er áltijd nog... | eerst vrolijk, dan langzaam en spookachtig
+tot_ziens | Tot volgend jaar, kleine griezels! Ik ben er nog... ... Ik ben er áltijd nog... | eerst vrolijk, dan na een lange stilte langzaam en spookachtig
 gaap      | <sigh> Hoaah... <short pause> Ben ik in slaap gevallen? <short pause> Hoe laat is het? <short pause> O ja. Spooktijd! | slaperig, dan ineens wakker en enthousiast

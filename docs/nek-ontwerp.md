@@ -46,6 +46,34 @@ De kabel (3 aders) komt aan de korte kant uit de behuizing.
 - **Aansluiting:** onderaan de wervel zit een schijfje van **Ø23 mm**. Daar moet de draaischijf op aansluiten, met een kom om het in te lijmen of te klemmen.
 - **Kabels:** uit de schedel komen de kabels van de kaakservo (3 aders) en de led-ogen. Die moeten via de draaischijf en het gat in het lager naar beneden kunnen. Laat genoeg ruimte zodat ze bij het draaien niet knellen of afknappen.
 
+### Ruimte in de klok
+
+- **Schedel met wervel:** ongeveer 15 cm hoog, 11 cm diep en 8 à 8,5 cm breed.
+- **Binnenruimte van de klok:**
+  - 23 cm breed.
+  - Nu 9 cm diep. Dat wordt aan de achterkant uitgebreid met 18 of 26 mm, dus 10,8 of 11,6 cm diep.
+  - Tot het klokgedeelte ongeveer 28 cm hoog.
+- **Plateau:** er komt een plateau op ongeveer 7 cm hoogte.
+  - Onder het plateau komen de printplaat, de speaker en de microfoon.
+  - Op het plateau staan de schedel en de kaarsen. De kaarsen komen naast de schedel.
+- **Het hele draaimechanisme zit onder het plateau.**
+  - Het lager en de servo hangen onder de plaat.
+  - De draaischijf zit in een rond gat in het plateau, met de bovenkant gelijk aan het plateau.
+  - De schedel staat dus vlak op de plaat.
+- **Positie van de draaias:**
+  - Vanaf de draaias steekt het puntje van neus en mond **6,5 à 7 cm** naar voren uit.
+  - Het achterhoofd steekt ongeveer **4 cm** naar achteren uit, want de schedel is 11 cm diep.
+  - De klok wordt 11,6 cm diep. Daarom komt de wervel op ongeveer **7,3 cm** van de binnenkant van de voorkant. Dan blijft er voor en achter ongeveer 3 mm vrij.
+  - **Het lager past daar niet precies onder.**
+    - Over de hoeken heeft het lager tot ongeveer 4,65 cm vanaf het midden nodig.
+    - De draaiende plaat staat in rust 45° gedraaid, dus met een hoek naar de achterwand.
+    - Het midden van het lager moet daarom tussen ongeveer 4,7 en 6,9 cm van de voorkant komen. Met een beetje speling wordt dat ongeveer **6,7 cm**.
+  - **De wervel staat daarom zo'n 6 mm achter het midden van het lager**, niet erop.
+    - Het hoofd zwaait bij ±25° maar ongeveer 2,5 mm opzij. Dat zie je niet.
+    - Het lager draagt zo'n klein verschil zonder problemen.
+    - Vanaf het midden van het lager steekt het gezicht dan ongeveer 6,4 cm naar voren, en het achterhoofd ongeveer 4,6 cm naar achteren. Bij het draaien wordt dat alleen minder.
+  - Helemaal rond draaien kan niet, want met het gezicht naar achteren past het niet in de diepte. Binnen ±60° is het geen probleem.
+
 ## Voorstel voor de opbouw
 
 Dit is een idee, geen eis; een beter ontwerp is welkom.
