@@ -57,7 +57,18 @@ VOICES_ALL = VOICES + [DESIGNED_VOICE]
 GEMINI_RATE = 24000
 SEND_EVERY = 2  # mic frames (20 ms) per message to Gemini
 
-LANGUAGE_RULE = "\n- Spreek altijd Nederlands, ook als iemand een andere taal spreekt."
+LANGUAGE_RULE = """
+- Iedereen aan de deur spreekt Nederlands, ook als het anders klinkt. Het zijn \
+kleine kinderen: ze praten zacht, slissen, mompelen, praten door elkaar of \
+roepen door een masker heen. Ga er altijd van uit dat het Nederlands is en \
+kies de meest logische Nederlandse betekenis (Halloween, snoep, kostuums, \
+griezels). Zeg nooit dat iemand een andere taal spreekt en vraag niet welke \
+taal het is. Spreek zelf altijd Nederlands."""
+
+# Words kids at the door are likely to say; biases the Dutch speech recognition.
+VOCABULARY = ["Knekelbeen", "snoep", "snoepje", "trick or treat", "Halloween",
+              "spook", "heks", "vampier", "zombie", "skelet", "pompoen",
+              "griezel", "kostuum", "boe", "eng", "bang", "mop", "liedje"]
 
 # Effects the skull can trigger itself; name -> skull HTTP path.
 EFFECTS = {
@@ -174,9 +185,11 @@ def live_config(voice: str) -> types.LiveConnectConfig:
         system_instruction=(ai.load_persona() + ai.RULES + LANGUAGE_RULE
                             + EFFECT_RULE + ai.load_examples() + ai.load_jokes(shuffle=True)),
         tools=[EFFECT_TOOL],
-        speech_config=types.SpeechConfig(voice_config=types.VoiceConfig(
+        speech_config=types.SpeechConfig(language_code="nl", voice_config=types.VoiceConfig(
             prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice))),
-        input_audio_transcription=types.AudioTranscriptionConfig(),
+        # Dutch only: with auto-detection, kids' voices got heard as other languages.
+        input_audio_transcription=types.AudioTranscriptionConfig(
+            language_codes=["nl-NL"], custom_vocabulary=VOCABULARY),
         output_audio_transcription=types.AudioTranscriptionConfig(),
         realtime_input_config=types.RealtimeInputConfig(
             automatic_activity_detection=types.AutomaticActivityDetection(

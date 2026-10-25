@@ -55,7 +55,8 @@ Niet twee keer achter elkaar hetzelfde."""
 SCHEMA = {
     "type": "object",
     "properties": {
-        "gehoord": {"type": "string"},
+        "gehoord": {"type": "string",
+                    "description": "Wat het kind zei, in het Nederlands (het is altijd Nederlands)."},
         "antwoord": {"type": "string"},
         "stijl": {"type": "string"},
         "effect": {"type": "string", "enum": [*gemini.EFFECTS, "geen"]},
