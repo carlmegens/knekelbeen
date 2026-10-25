@@ -21,13 +21,16 @@ namespace servo {
 static const int CH = 2, BITS = 14, HZ = 50;
 static bool attached = false;
 static void write(float deg) {
+  float us = 500 + constrain(deg, 0.0f, 180.0f) * 2000 / 180;
+  uint32_t duty = us * ((1 << BITS) - 1) / (1000000 / HZ);
   if (!attached) {
     ledcSetup(CH, HZ, BITS);
+    ledcWrite(CH, duty);  // before the pin goes live, so no stray first pulse
     ledcAttachPin(PIN_TURN_SERVO, CH);
     attached = true;
+  } else {
+    ledcWrite(CH, duty);
   }
-  float us = 500 + constrain(deg, 0.0f, 180.0f) * 2000 / 180;
-  ledcWrite(CH, (uint32_t)(us * ((1 << BITS) - 1) / (1000000 / HZ)));
 }
 static void release() {
   if (!attached) return;
@@ -87,7 +90,9 @@ static void turnTask(void *) {
       deg = t >= 1 ? to : from + (to - from) * s;
       servo::write(deg);
       restSince = now;
-    } else if (now - restSince > TURN_IDLE_RELEASE_MS) {
+    } else if (!audio::isPlaying() && now - restSince > TURN_IDLE_RELEASE_MS) {
+      // Hold while talking (the mic is muted then anyway): a slack servo lets
+      // the head drift or spring back on the wires, and the next move jerks.
       servo::release();
     }
     vTaskDelayUntil(&last, period);

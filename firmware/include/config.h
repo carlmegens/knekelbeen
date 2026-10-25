@@ -41,7 +41,7 @@
 #define TURN_CENTER_DEG_DEFAULT 90
 #define TURN_RANGE_DEG_DEFAULT  25   // each way; keep inside the neck's stops
 #define TURN_RANGE_DEG_MAX      60
-#define TURN_IDLE_RELEASE_MS    600
+#define TURN_IDLE_RELEASE_MS    3000  // quiet time before the servo goes slack
 
 // ---- PIR ----
 #define PIR_COOLDOWN_S_DEFAULT  30   // ignore motion this long after a trigger
