@@ -1,5 +1,7 @@
 # Knekelbeen 💀
 
+<p align="center"><img src="docs/knekelbeen.jpg" alt="Knekelbeen in de slingerkast van de wandklok" width="360"></p>
+
 Een pratende Halloween-schedel die in de slingerkast van een oude wandklok
 woont. Hij praat in het Nederlands met de kinderen aan de deur, beweegt zijn
 kaak mee met wat hij zegt, kijkt rond, laat zijn ogen gloeien en zet de kaarsen
