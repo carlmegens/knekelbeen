@@ -10,13 +10,14 @@ namespace jaw {
 // once the SD card code was linked in.
 namespace servo {
 static const int CH = 0, BITS = 14, HZ = 50;
-static void attach() {
-  ledcSetup(CH, HZ, BITS);
-  ledcAttachPin(PIN_SERVO, CH);
-}
 static void write(float deg) {  // 0..180 deg = 500..2500 us
   float us = 500 + constrain(deg, 0.0f, 180.0f) * 2000 / 180;
   ledcWrite(CH, (uint32_t)(us * ((1 << BITS) - 1) / (1000000 / HZ)));
+}
+static void attach(float deg) {
+  ledcSetup(CH, HZ, BITS);
+  write(deg);  // before the pin goes live, so no stray first pulse
+  ledcAttachPin(PIN_SERVO, CH);
 }
 static void detach() {
   ledcDetachPin(PIN_SERVO);
@@ -72,10 +73,11 @@ static void jawTask(void *) {
     float deg = (rawDeg >= 0) ? rawDeg : calClosed + (calOpen - calClosed) * pos;
     if (fabsf(deg - lastDeg) >= 0.05f) {
       if (!attached) {
-        servo::attach();
+        servo::attach(deg);
         attached = true;
+      } else {
+        servo::write(deg);
       }
-      servo::write(deg);
       lastDeg = deg;
       lastMove = now;
     } else if (attached && rawDeg < 0 && targetPos < 0.01f &&
@@ -94,8 +96,7 @@ void begin() {
   calOpen = prefs.getInt("open", JAW_OPEN_DEG_DEFAULT);
   softMs = prefs.getInt("soft", JAW_SOFT_MS_DEFAULT);
 
-  servo::attach();
-  servo::write(calClosed);
+  servo::attach(calClosed);
 
   xTaskCreatePinnedToCore(jawTask, "jaw", 4096, nullptr, 3, nullptr, 1);
 }
