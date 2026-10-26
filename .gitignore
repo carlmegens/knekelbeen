@@ -11,3 +11,5 @@ radar/.pio/
 .venv-esphome/
 radar/secrets.yaml
 radar/.esphome/
+clips/adres.wav
+clips/*.local.txt
