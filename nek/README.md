@@ -75,16 +75,14 @@ Inserts zetten: 210–230 °C voor PLA, 230–250 °C voor PETG.
 5. Draai de cap tot de sleuf onder de insert van de arm ligt. Draai de
    stelschroef erin tot hij gelijk ligt met de bovenkant van de arm. De punt zit
    dan ~2,5 mm in de sleuf en raakt de stalen plaat niet.
-6. Lijm de schijfafstandhouder op de cap: het randje valt in het groefje, de
-   draaduitgang wijst van de servo af. Lijm de houten schijf erop en de wervel
-   daarop.
+6. Lijm de schijfafstandhouder op de cap: het randje valt in het groefje.
+   Lijm de houten schijf erop en de wervel daarop.
 7. Schroef de vloerafstandhouders vast bij de hoeken van het plateau, minstens
    55 mm van het midden van de lazy susan en buiten het bereik van de arm. Leg
    het plateau er los op; zo kun je er later weer bij.
 
-De kabels uit de schedel gaan door de wervel en de schijf naar beneden en via
-de zijuitgang van de afstandhouder onder het plateau weg. Laat ze ruim
-genoeg hangen voor ±30°.
+De kabels uit de schedel gaan niet door de nek. Laat ze ruim genoeg hangen
+voor ±30°.
 
 ## Firmware
 
