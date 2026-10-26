@@ -265,8 +265,16 @@ static void setupServer() {
 
   server.on("/amps", [] {
     if (server.hasArg("sleep")) audio::setAmpSleep(server.arg("sleep") == "1");
+    if (server.hasArg("bass")) audio::setBassCut(server.arg("bass").toInt());
+    if (server.hasArg("echoon") || server.hasArg("echo") || server.hasArg("echoms"))
+      audio::setEcho(server.hasArg("echoon") ? server.arg("echoon") == "1" : audio::echoEnabled(),
+                     server.hasArg("echo") ? server.arg("echo").toInt() : audio::echo(),
+                     server.hasArg("echoms") ? server.arg("echoms").toInt() : audio::echoMs());
     server.send(200, "application/json",
-                String("{\"sleep\":") + (audio::ampSleepOn() ? "true" : "false") + "}");
+                String("{\"sleep\":") + (audio::ampSleepOn() ? "true" : "false") +
+                    ",\"bass\":" + audio::bassCut() + ",\"echoon\":" + (audio::echoEnabled() ? "true" : "false") +
+                    ",\"echo\":" + audio::echo() +
+                    ",\"echoms\":" + audio::echoMs() + "}");
   });
 
   server.on("/mic", [] {

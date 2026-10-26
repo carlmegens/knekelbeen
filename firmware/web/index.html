@@ -55,6 +55,7 @@
  }
  .row{display:flex;align-items:center;gap:.5em;flex-wrap:wrap}
  .ends{display:flex;justify-content:space-between;color:var(--muted);font-size:.9em}
+ .dim{opacity:.4}
  .pill{display:inline-block;margin:.6em 0;padding:.3em .8em;border-radius:999px;background:var(--neutral);font-weight:600}
  .saved{color:var(--accent);margin-left:.4em}
  dialog{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;max-width:340px}
@@ -89,9 +90,22 @@
 <div class="cols">
 <h2 class="cat wide">&#128264; Geluid</h2>
 <div class="grp">
+ <h3>Stem</h3>
+ <label><input id="aEchoOn" type="checkbox"> Echo</label>
+ <label class="echobox">Sterkte
+  <input id="aEcho" type="range" min="5" max="80" step="5" aria-label="Sterkte van de echo">
+  <span class="ends"><span>Zacht</span><span>Sterk</span></span></label>
+ <label class="echobox">Galm
+  <input id="aEchoMs" type="range" min="50" max="600" step="10" aria-label="Vertraging van de echo">
+  <span class="ends"><span>Holle schedel</span><span>Grote kelder</span></span></label>
+ <span class="help">Galm op alles wat de schedel afspeelt: clips, effecten en de AI.</span>
+</div>
+<div class="grp">
  <h3>Versterkers</h3>
  <label><input id="aSleep" type="checkbox"> Uit als er niets speelt
   <span class="help">Voorkomt brommen en ruisen in stilte. Zet dit uit als het begin van een zin wegvalt.</span></label>
+ <label>Lage tonen weg onder (Hz) <input id="aBass" type="number" min="0" max="750" step="10">
+  <span class="help">Een klein speakertje kan geen diepe bas aan: het conusje slaat dan te ver uit en gaat kraken. Hoger = minder kraak, maar een dunnere stem. 0 = uit. Probeer 200 tot 300.</span></label>
 </div>
 <h2 class="cat wide">&#128128; Kaak</h2>
 <div class="grp">
@@ -357,7 +371,12 @@ $('lB').oninput=()=>$('lBv').textContent=$('lB').value+'%';
 api('led2').then(r=>r.json()).then(j=>{$('lCount').value=j.count;$('lColor').value='#'+j.color.toLowerCase();
  $('lB').value=j.bright;$('lBv').textContent=j.bright+'%';$('lMode').value=j.mode}).catch(()=>{});
 $('aSleep').onchange=()=>api('amps?sleep='+($('aSleep').checked?1:0));
-api('amps').then(r=>r.json()).then(j=>{$('aSleep').checked=j.sleep}).catch(()=>{});
+$('aBass').onchange=()=>api('amps?bass='+$('aBass').value);
+function syncEcho(){const on=$('aEchoOn').checked;for(const id of ['aEcho','aEchoMs'])$(id).disabled=!on;
+ document.querySelectorAll('.echobox').forEach(e=>e.classList.toggle('dim',!on))}
+const setEcho=()=>{syncEcho();api('amps?echoon='+($('aEchoOn').checked?1:0)+'&echo='+$('aEcho').value+'&echoms='+$('aEchoMs').value)};
+$('aEchoOn').onchange=setEcho;$('aEcho').onchange=setEcho;$('aEchoMs').onchange=setEcho;
+api('amps').then(r=>r.json()).then(j=>{$('aSleep').checked=j.sleep;$('aBass').value=j.bass;$('aEchoOn').checked=j.echoon;$('aEcho').value=j.echo;$('aEchoMs').value=j.echoms;syncEcho()}).catch(()=>{});
 try{$('setup').open=localStorage.getItem('setup')==='1'}catch(e){}
 $('setup').ontoggle=()=>{try{localStorage.setItem('setup',$('setup').open?'1':'0')}catch(e){}};
 

@@ -30,6 +30,16 @@ int volume();
 void setAmpSleep(bool on);
 bool ampSleepOn();
 
+// High-pass for the small speaker: tones below this (Hz) are cut. 0 = off. Persisted.
+void setBassCut(int hz);
+int bassCut();
+
+// Echo on everything played: on/off, strength 0..80 %, delay 50..600 ms. Persisted.
+void setEcho(bool on, int pct, int ms);
+bool echoEnabled();
+int echo();
+int echoMs();
+
 // Jaw sync tuning (persisted).
 struct Sync {
   int gate;       // RMS below this = mouth closed (noise floor), 0..32767

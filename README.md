@@ -55,6 +55,11 @@ geprikt. Alles wat van de print af gaat, zit aan een schroefklem.
 | Microfoon INMP441 (I2S) | WS 16, SCK 17, SD 18 | MIC |
 | microSD (SPI) | SCK 13, MISO 14, MOSI 21, CS 47 | op de print |
 
+**De schedel** is de [Robot Skull (Like Geoff off Craig Ferguson)](https://www.printables.com/model/471773-robot-skull-like-geoff-off-craig-ferguson)
+van Geoff Williams op Printables (CC BY-SA). Op ware grootte geprint is hij
+8,4 cm breed, 11,5 cm diep en 9,4 cm hoog: ongeveer half zo groot als een echte
+schedel. Alleen de schedel en de wervel zijn geprint.
+
 De pinnen staan in [`firmware/include/config.h`](firmware/include/config.h).
 Voeding: een aparte 5 V-voeding voor de versterkers, servo's en leds.
 

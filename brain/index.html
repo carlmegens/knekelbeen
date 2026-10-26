@@ -148,10 +148,20 @@
   <input id="pitch" type="range" min="0.6" max="1.0" step="0.05" value="0.85" aria-label="Toonhoogte">
   <span class="ends"><span>Dieper</span><span>Normaal</span></span></label>
  <span class="help">Geldt voor de AI-schedel, live praten en nieuwe opnames.</span>
+ <label><input id="aEchoOn" type="checkbox"> Echo</label>
+ <label class="echobox">Sterkte
+  <input id="aEcho" type="range" min="5" max="80" step="5" aria-label="Sterkte van de echo">
+  <span class="ends"><span>Zacht</span><span>Sterk</span></span></label>
+ <label class="echobox">Galm
+  <input id="aEchoMs" type="range" min="50" max="600" step="10" aria-label="Vertraging van de echo">
+  <span class="ends"><span>Holle schedel</span><span>Grote kelder</span></span></label>
+ <span class="help">Galm op alles wat de schedel afspeelt: clips, effecten en de AI.</span>
 </details>
 <details class="panel" id="sec-amps"><summary>Versterkers</summary>
  <label><input id="aSleep" type="checkbox"> Uit als er niets speelt
   <span class="help">Voorkomt brommen en ruisen in stilte. Zet dit uit als het begin van een zin wegvalt.</span></label>
+ <label>Lage tonen weg onder (Hz) <input id="aBass" type="number" min="0" max="750" step="10">
+  <span class="help">Een klein speakertje kan geen diepe bas aan: het conusje slaat dan te ver uit en gaat kraken. Hoger = minder kraak, maar een dunnere stem. 0 = uit. Probeer 200 tot 300.</span></label>
 </details>
 </div>
 <details class="panel span2" id="sec-aiset" open><summary>AI-schedel</summary>
@@ -626,7 +636,7 @@ async function loadSettings(){
  if(pir){$('pOn').checked=pir.enabled;$('pCool').value=pir.cooldown;pirPoll()}
  if(led2){$('lCount').value=led2.count;$('lColor').value='#'+led2.color.toLowerCase();$('lB').value=led2.bright;
   $('lBv').textContent=led2.bright+'%';$('lMode').value=led2.mode}
- if(amps)$('aSleep').checked=amps.sleep}
+ if(amps){$('aSleep').checked=amps.sleep;$('aBass').value=amps.bass;$('aEchoOn').checked=amps.echoon;$('aEcho').value=amps.echo;$('aEchoMs').value=amps.echoms;syncEcho()}}
 async function saveSync(btn){await api('sync?gate='+$('sGate').value+'&sens='+$('sSens').value+'&lead='+$('sLead').value);flash(btn)}
 async function saveCal(btn){await api('cal?closed='+$('sC').value+'&open='+$('sO').value);flash(btn)}
 async function saveEyes(btn){await api('eyes?color='+$('eyeColor').value.slice(1)+'&bright='+$('eyeB').value+'&mode='+$('eyeMode').value);flash(btn)}
@@ -642,6 +652,11 @@ async function pirPoll(){if($('viewSettings').hidden)return;const j=await getJ('
 setInterval(pirPoll,2000);
 $('lB').oninput=()=>$('lBv').textContent=$('lB').value+'%';
 $('aSleep').onchange=()=>api('amps?sleep='+($('aSleep').checked?1:0));
+$('aBass').onchange=()=>api('amps?bass='+$('aBass').value);
+function syncEcho(){const on=$('aEchoOn').checked;for(const id of ['aEcho','aEchoMs'])$(id).disabled=!on;
+ document.querySelectorAll('.echobox').forEach(e=>e.classList.toggle('dim',!on))}
+const setEcho=()=>{syncEcho();api('amps?echoon='+($('aEchoOn').checked?1:0)+'&echo='+$('aEcho').value+'&echoms='+$('aEchoMs').value)};
+$('aEchoOn').onchange=setEcho;$('aEcho').onchange=setEcho;$('aEchoMs').onchange=setEcho;
 $('eyeB').oninput=()=>$('eyeBv').textContent=$('eyeB').value+'%';
 $('cB').oninput=()=>$('cBv').textContent=$('cB').value+'%';
 $('cVoice').onchange=()=>api('candles?voice='+($('cVoice').checked?1:0));

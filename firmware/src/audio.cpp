@@ -106,12 +106,79 @@ static volatile uint32_t audibleTailMs = 0;
 static const int SOUND_LEVEL = 300;  // about -40 dBFS
 static const int ROOM_ECHO_MS = 120;
 
+// A small speaker can't play deep bass: the cone only swings further, hits
+// something and buzzes. Two cascaded biquads = 4th-order Butterworth high-pass.
+static volatile int bassCutHz = 250;  // 0 = off
+struct Biquad {
+  float b0, b1, b2, a1, a2, z1 = 0, z2 = 0;
+  float run(float x) {
+    float y = b0 * x + z1;
+    z1 = b1 * x - a1 * y + z2;
+    z2 = b2 * x - a2 * y;
+    return y;
+  }
+};
+static Biquad highPass[2];
+static uint32_t highPassRate = 0;
+static int highPassHz = -1;
+
+static void updateHighPass() {
+  if (highPassRate == currentRate && highPassHz == bassCutHz) return;
+  highPassRate = currentRate;
+  highPassHz = bassCutHz;
+  if (highPassHz <= 0 || !highPassRate) return;
+  const float q[2] = {0.5412f, 1.3066f};
+  float w = 2 * PI * highPassHz / highPassRate, c = cosf(w);
+  for (int k = 0; k < 2; k++) {
+    float alpha = sinf(w) / (2 * q[k]), a0 = 1 + alpha;
+    Biquad &f = highPass[k];
+    f.b0 = f.b2 = (1 + c) / 2 / a0;
+    f.b1 = -(1 + c) / a0;
+    f.a1 = -2 * c / a0;
+    f.a2 = (1 - alpha) / a0;
+    f.z1 = f.z2 = 0;
+  }
+}
+
+// Echo: a feedback delay, so each repeat is softer than the last.
+static volatile bool echoOn = false;
+static volatile int echoPct = 30;
+static volatile int echoDelayMs = 250;
+static const int ECHO_MAX_MS = 600;
+static float *echoBuf = nullptr;  // PSRAM, ECHO_MAX_MS at 48 kHz
+static int echoPos = 0;
+
+static void echoClear() {
+  if (echoBuf) memset(echoBuf, 0, ECHO_MAX_MS * 48 * sizeof(float));
+  echoPos = 0;
+}
+
+// How long the repeats stay audible (to about -40 dB), to let them ring out.
+static int echoTailMs() {
+  if (!echoOn || echoPct <= 0) return 0;
+  float g = echoPct / 100.0f, fb = g * 0.6f;
+  int repeats = 1 + (int)ceilf(logf(0.01f / g) / logf(fb));
+  return min(repeats * echoDelayMs, 3000);
+}
+
 static void writeMono(const int16_t *s, int n) {
   static int16_t frames[2 * 480];
   int v = vol;
   bool sound = false;
+  updateHighPass();
+  bool filter = highPassHz > 0;
+  float g = echoBuf && echoOn ? echoPct / 100.0f : 0, fb = g * 0.6f;
+  int len = constrain(echoDelayMs * (int)currentRate / 1000, 1, ECHO_MAX_MS * 48);
+  float headroom = 1 / (1 + 0.5f * g);
   for (int i = 0; i < n; i++) {
-    int16_t x = (int32_t)s[i] * v / 100;
+    float y = filter ? highPass[1].run(highPass[0].run(s[i])) : s[i];
+    if (g > 0) {
+      if (echoPos >= len) echoPos = 0;
+      float d = echoBuf[echoPos];
+      echoBuf[echoPos++] = y + fb * d;
+      y = (y + g * d) * headroom;
+    }
+    int16_t x = constrain((int32_t)(y * v / 100), -32768, 32767);
     frames[2 * i] = frames[2 * i + 1] = x;
     if (x > SOUND_LEVEL || x < -SOUND_LEVEL) sound = true;
   }
@@ -299,7 +366,9 @@ static void playSource(Source &src, bool mouth = true) {
   Envelope env;
   env.reset();
 
-  int drain = leadBlocks + 1;  // blocks still to flush from the ring after EOF
+  echoClear();
+  // Blocks still to flush from the ring after EOF, then the echo ringing out.
+  int drain = leadBlocks + 1 + echoTailMs() / 10;
   bool ended = false;
   while (!stopFlag) {
     int16_t *mono = ring + head * blockN;
@@ -385,6 +454,11 @@ void begin() {
   cfg.sensitivity = prefs.getInt("sens", 60);
   cfg.leadMs = prefs.getInt("lead", 100);
   ampSleep = prefs.getBool("ampsleep", true);
+  bassCutHz = prefs.getInt("basscut", 250);
+  echoOn = prefs.getBool("echoon", false);
+  echoPct = prefs.getInt("echo", 30);
+  echoDelayMs = prefs.getInt("echoms", 250);
+  echoBuf = (float *)ps_calloc(ECHO_MAX_MS * 48, sizeof(float));
   pinBclk = prefs.getInt("bclk", PIN_I2S_BCLK);
   pinLrc = prefs.getInt("lrc", PIN_I2S_LRC);
   pinDin = prefs.getInt("din", PIN_I2S_DIN);
@@ -479,6 +553,24 @@ void setAmpSleep(bool on) {
   if (!playing) ampsOff();  // applies right away (stays on if sleep is off)
 }
 bool ampSleepOn() { return ampSleep; }
+
+void setBassCut(int hz) {
+  bassCutHz = constrain(hz, 0, 750);
+  prefs.putInt("basscut", bassCutHz);
+}
+int bassCut() { return bassCutHz; }
+
+void setEcho(bool on, int pct, int ms) {
+  echoOn = on;
+  echoPct = constrain(pct, 0, 80);
+  prefs.putBool("echoon", on);
+  echoDelayMs = constrain(ms, 50, ECHO_MAX_MS);
+  prefs.putInt("echo", echoPct);
+  prefs.putInt("echoms", echoDelayMs);
+}
+bool echoEnabled() { return echoOn; }
+int echo() { return echoPct; }
+int echoMs() { return echoDelayMs; }
 
 Sync sync() { return cfg; }
 void setSync(const Sync &s) {
