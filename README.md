@@ -69,8 +69,9 @@ Voeding: een aparte 5 V-voeding voor de versterkers, servo's en leds.
 | [`pcb/`](pcb/) | De printplaat (KiCad, door scripts gegenereerd) en de gerbers |
 | [`case/`](case/) | Het geprinte kastje voor de print (OpenSCAD) |
 | [`kaarsen/`](kaarsen/) | De geprinte kaarsen voor de WS2801-ledjes |
+| [`nek/`](nek/) | De draaiende nek: Fusion-ontwerp, STL's, schroeven en montage |
 | [`radar/`](radar/) | ESPHome-config voor de Seeed MR24HPC1-radar als bezoekerssensor |
-| [`docs/`](docs/) | Het nek-ontwerp, ideeën en het camera-plan |
+| [`docs/`](docs/) | De ontwerpopdracht voor de nek, ideeën en het camera-plan |
 | `voices/` | Piper-stemmen (niet in git) en de ID van de ontworpen Gemini-stem |
 
 ## Aan de slag
