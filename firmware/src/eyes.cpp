@@ -18,6 +18,7 @@ static volatile uint32_t rgb = 0xFF2000;  // ember red-orange
 static volatile int bright = 80;
 static volatile Mode currentMode = AUTO;
 static volatile uint32_t flashUntil = 0;
+static volatile bool enabled = true;
 
 static void eyesTask(void *) {
   const TickType_t period = pdMS_TO_TICKS(20);  // 50 Hz
@@ -28,7 +29,7 @@ static void eyesTask(void *) {
     uint32_t now = millis();
     if (now < flashUntil) {
       level = 1.0f;
-    } else if (currentMode == OFF) {
+    } else if (currentMode == OFF || !enabled) {
       level = 0;
     } else if (currentMode == ON) {
       level = 1.0f;
@@ -60,6 +61,8 @@ void begin() {
   rgb = prefs.getUInt("rgb", 0xFF2000);
   bright = prefs.getInt("bright", 80);
   currentMode = (Mode)prefs.getInt("mode", AUTO);
+  enabled = prefs.getBool("on", true);
+  if (currentMode == OFF) currentMode = AUTO, enabled = false;  // "Uit" used to be a mode
   xTaskCreatePinnedToCore(eyesTask, "eyes", 3072, nullptr, 2, nullptr, 1);
 }
 
@@ -75,6 +78,12 @@ void set(uint32_t c, int b, Mode m) {
 uint32_t color() { return rgb; }
 int brightness() { return bright; }
 Mode mode() { return currentMode; }
+
+void setOn(bool on) {
+  enabled = on;
+  prefs.putBool("on", on);
+}
+bool isOn() { return enabled; }
 void flash() { flashUntil = millis() + 300; }
 
 }  // namespace eyes

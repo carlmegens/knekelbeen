@@ -13,6 +13,7 @@ void begin();
 void configure(int count, const String &order, int brightness, Mode mode);  // persisted
 void setSpeed(int percent);  // flicker speed 20..300 %, persisted
 void setVoiceReact(bool on);  // flare with the skull's voice, persisted
+void setOn(bool on);  // persisted; keeps the other settings
 void trigger(Effect e);
 String json();
 

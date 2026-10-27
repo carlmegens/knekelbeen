@@ -14,6 +14,7 @@ static volatile int bright = 80;
 static volatile int speed = 100;  // flicker speed, % of normal
 static volatile bool voiceReact = true;  // flare with the skull's voice
 static volatile Mode mode = FLICKER;
+static volatile bool enabled = true;
 static char order[4] = "RGB";  // byte order the string expects
 static volatile Effect effect = NONE;
 static volatile uint32_t effectStart = 0;
@@ -101,7 +102,7 @@ static void candleTask(void *) {
       // Colour follows brightness: dim = deep orange-red, bright = yellowish.
       float r = 255, g = 255 * (0.20f + 0.30f * flame), b = 255 * (0.01f + 0.05f * flame);
 
-      if (mode == OFF) k = 0;
+      if (mode == OFF || !enabled) k = 0;
       else if (mode == ON) k = master;
 
       switch (fx) {
@@ -151,6 +152,8 @@ void begin() {
   speed = constrain(prefs.getInt("speed", 100), 20, 300);
   voiceReact = prefs.getBool("voice", true);
   mode = (Mode)prefs.getInt("mode", FLICKER);
+  enabled = prefs.getBool("on", true);
+  if (mode == OFF) mode = FLICKER, enabled = false;  // "Uit" used to be a mode
   prefs.getString("order", "RGB").toCharArray(order, sizeof order);
   pinMode(PIN_CANDLE_DATA, OUTPUT);
   pinMode(PIN_CANDLE_CLK, OUTPUT);
@@ -182,13 +185,18 @@ void setVoiceReact(bool on) {
   prefs.putBool("voice", on);
 }
 
+void setOn(bool on) {
+  enabled = on;
+  prefs.putBool("on", on);
+}
+
 void trigger(Effect e) {
   effectStart = millis();
   effect = e;
 }
 
 String json() {
-  return String("{\"count\":") + count + ",\"order\":\"" + order + "\",\"bright\":" +
+  return String("{\"on\":") + (enabled ? "true" : "false") + ",\"count\":" + count + ",\"order\":\"" + order + "\",\"bright\":" +
          bright + ",\"mode\":" + (int)mode + ",\"speed\":" + speed +
          ",\"voice\":" + (voiceReact ? "true" : "false") + "}";
 }

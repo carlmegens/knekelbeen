@@ -56,6 +56,15 @@
  .row{display:flex;align-items:center;gap:.5em;flex-wrap:wrap}
  .ends{display:flex;justify-content:space-between;color:var(--muted);font-size:.9em}
  .dim{opacity:.4}
+ .tog{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:12px;font-weight:600}
+ .tog .help{flex-basis:100%;order:3;font-weight:400}
+ .tog input{appearance:none;-webkit-appearance:none;order:2;flex:none;position:relative;width:48px;height:28px;margin:0;
+  border-radius:14px;background:#888;cursor:pointer;transition:background .2s}
+ .tog input::before{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.4);transition:transform .2s}
+ .tog input:checked{background:#4cd137}
+ .tog input:checked::before{transform:translateX(20px)}
+ .tog input:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
  .pill{display:inline-block;margin:.6em 0;padding:.3em .8em;border-radius:999px;background:var(--neutral);font-weight:600}
  .saved{color:var(--accent);margin-left:.4em}
  dialog{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;max-width:340px}
@@ -91,7 +100,7 @@
 <h2 class="cat wide">&#128264; Geluid</h2>
 <div class="grp">
  <h3>Stem</h3>
- <label><input id="aEchoOn" type="checkbox"> Echo</label>
+ <label class="tog"><input id="aEchoOn" type="checkbox"> Echo</label>
  <label class="echobox">Sterkte
   <input id="aEcho" type="range" min="5" max="80" step="5" aria-label="Sterkte van de echo">
   <span class="ends"><span>Zacht</span><span>Sterk</span></span></label>
@@ -102,14 +111,21 @@
 </div>
 <div class="grp">
  <h3>Versterkers</h3>
+ <label class="tog"><input id="aOn" type="checkbox"> Geluid aan
+  <span class="help">Uit: er komt geen geluid uit de speaker. De kaak en de lichten doen wel mee.</span></label>
+<div class="sub" data-for="aOn">
  <label><input id="aSleep" type="checkbox"> Uit als er niets speelt
   <span class="help">Voorkomt brommen en ruisen in stilte. Zet dit uit als het begin van een zin wegvalt.</span></label>
  <label>Lage tonen weg onder (Hz) <input id="aBass" type="number" min="0" max="750" step="10">
   <span class="help">Een klein speakertje kan geen diepe bas aan: het conusje slaat dan te ver uit en gaat kraken. Hoger = minder kraak, maar een dunnere stem. 0 = uit. Probeer 200 tot 300.</span></label>
 </div>
+</div>
 <h2 class="cat wide">&#128128; Kaak</h2>
 <div class="grp">
  <h3>Kaaksynchronisatie</h3>
+ <label class="tog"><input id="jOn" type="checkbox"> Kaak aan
+  <span class="help">Uit: de kaak blijft dicht en de servo slap. De ogen, kaarsen en LED 2 reageren wel op de stem.</span></label>
+<div class="sub" data-for="jOn">
  <label>Ruisdrempel <input id="gate" type="number">
   <span class="help">Hoger negeert zachte geluiden en achtergrondruis.</span></label>
  <label>Gevoeligheid (%) <input id="sens" type="number">
@@ -122,6 +138,7 @@
   <span class="help">Hoe geleidelijk de kaak optrekt en afremt. Klapt hij dicht, zet dit hoger; volgt hij de woorden niet meer, lager (en eventueel meer voorsprong). Werkt direct; probeer het met Klapperen.</span></label>
  <div class="row"><button class="sm" onclick="saveSync(this)">Opslaan</button>
   <button class="sm neutral" onclick="api('tone')">Testtoon</button></div>
+</div>
 </div>
 <div class="grp">
  <h3>Kaakpositie</h3>
@@ -143,22 +160,27 @@
 <h2 class="cat wide">&#128161; Lichten</h2>
 <div class="grp">
  <h3>Ogen</h3>
+ <label class="tog"><input id="eOn" type="checkbox"> Ogen aan</label>
+<div class="sub" data-for="eOn">
  <div class="row"><label style="margin:0">Kleur <input id="eyeColor" type="color" value="#ff2000" aria-label="Kleur van de ogen"></label>
   <select id="eyeMode" aria-label="Werking van de ogen">
-   <option value="0">Automatisch</option><option value="1">Altijd aan</option><option value="2">Uit</option></select></div>
+   <option value="0">Automatisch</option><option value="1">Altijd aan</option></select></div>
  <label>Helderheid <span id="eyeBv"></span>
   <input id="eyeB" type="range" min="0" max="100" aria-label="Helderheid van de ogen"></label>
  <span class="help">Automatisch: de ogen gloeien zacht en lichten op met elke lettergreep.</span>
  <div class="row"><button class="sm" onclick="saveEyes(this)">Opslaan</button>
   <button class="sm neutral" onclick="api('eyes?flash=1')">Flits</button></div>
 </div>
+</div>
 <div class="grp">
  <h3>Kaarsen</h3>
+ <label class="tog"><input id="kOn" type="checkbox"> Kaarsen aan</label>
+<div class="sub" data-for="kOn">
  <div class="row"><label style="margin:0">Aantal <input id="cCount" type="number" min="1" max="20"></label>
   <label style="margin:0">Kleurvolgorde <select id="cOrder" aria-label="Kleurvolgorde">
    <option>RGB</option><option>RBG</option><option>GRB</option><option>GBR</option><option>BRG</option><option>BGR</option></select></label></div>
  <div class="row"><select id="cMode" aria-label="Werking van de kaarsen">
-   <option value="0">Flakkeren</option><option value="1">Altijd aan</option><option value="2">Uit</option></select></div>
+   <option value="0">Flakkeren</option><option value="1">Altijd aan</option></select></div>
  <label>Helderheid <span id="cBv"></span>
   <input id="cB" type="range" min="0" max="100" aria-label="Helderheid van de kaarsen"></label>
  <label><input id="cVoice" type="checkbox"> Reageren op stem
@@ -173,22 +195,27 @@
   <button class="sm neutral" onclick="api('candles?effect=flare')">Opflakkeren</button>
   <button class="sm neutral" onclick="api('candles?effect=ghost')">Spookgroen</button></div>
 </div>
+</div>
 <div class="grp">
  <h3>LED 2</h3>
+ <label class="tog"><input id="lOn" type="checkbox"> LED 2 aan</label>
+<div class="sub" data-for="lOn">
  <div class="row"><label style="margin:0">Aantal <input id="lCount" type="number" min="1" max="60"></label>
   <label style="margin:0">Kleur <input id="lColor" type="color" value="#ff2000" aria-label="Kleur van LED 2"></label></div>
  <div class="row"><select id="lMode" aria-label="Werking van LED 2">
-   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="2">Uit</option></select></div>
+   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="4">Draaien</option><option value="5">Stemmeter</option></select></div>
  <label>Helderheid <span id="lBv"></span>
   <input id="lB" type="range" min="0" max="100" aria-label="Helderheid van LED 2"></label>
- <span class="help">Een WS2812-ledje of -strip op de LED 2-aansluiting, bijvoorbeeld in een lantaarn of ketel.</span>
+ <span class="help">Een WS2812-ledje, -strip of -ring op de LED 2-aansluiting, bijvoorbeeld in een lantaarn, ketel of pompoen. Zet Aantal op het aantal ledjes. Draaien en Stemmeter zijn voor een ring of strip.</span>
  <button class="sm" onclick="saveLed2(this)">Opslaan</button>
+</div>
 </div>
 <h2 class="cat wide">&#128064; Beweging</h2>
 <div class="grp">
  <h3>Hoofd draaien</h3>
- <label><input id="tOn" type="checkbox"> Draaiservo aan
+ <label class="tog"><input id="tOn" type="checkbox"> Draaiservo aan
   <span class="help">Uit: de servo op DRAAI krijgt geen signaal en blijft slap. Zet hem pas aan als de nek gemonteerd is.</span></label>
+<div class="sub" data-for="tOn">
  <label><input id="tLively" type="checkbox"> Rondkijken tijdens het praten
   <span class="help">Het hoofd kijkt af en toe opzij terwijl de schedel praat, en daarna weer recht vooruit.</span></label>
  <div class="row"><label style="margin:0">Midden (°) <input id="tCenter" type="number" min="0" max="180"></label>
@@ -201,16 +228,19 @@
   <button class="sm neutral" onclick="api('turn?pos=100')">Rechts</button></div>
  <span class="help">Sla eerst op, dan werken Links, Midden en Rechts met de nieuwe waarden.</span>
 </div>
+</div>
 <div class="grp">
  <h3>Bewegingssensor</h3>
- <label><input id="pOn" type="checkbox"> Begroeten bij beweging
+ <label class="tog"><input id="pOn" type="checkbox"> Bewegingssensor aan
   <span class="help">Als de sensor iemand ziet, flitsen de ogen en begroet de AI-schedel de bezoekers met een nieuw gesprek.</span></label>
+<div class="sub" data-for="pOn">
  <label>Wachttijd (s) <input id="pCool" type="number" min="5" max="600">
   <span class="help">Zo lang na een begroeting reageert de sensor niet opnieuw, zodat één groep niet steeds wordt begroet.</span></label>
  <p class="help" id="pState"></p>
  <div class="row"><button class="sm" onclick="savePir(this)">Opslaan</button>
   <button class="sm neutral" onclick="api('pir?test=1');setTimeout(pirPoll,2500)">Test</button></div>
  <span class="help">Test doet alsof er iemand aankomt. Staat de AI-schedel aan, dan begroet hij je.</span>
+</div>
 </div>
 </div>
 </details>
@@ -335,13 +365,13 @@ function setPos(v){$('pos').value=v;$('posv').textContent=v;sendPos(v)}
 const softLbl=v=>v==0?'uit':v+' ms';
 let softT;$('soft').oninput=()=>{$('softv').textContent=softLbl($('soft').value);clearTimeout(softT);
  softT=setTimeout(()=>api('jaw?soft='+$('soft').value),150)};
-api('jaw').then(r=>r.json()).then(j=>{$('soft').value=j.soft;$('softv').textContent=softLbl(j.soft)}).catch(()=>{});
+api('jaw').then(r=>r.json()).then(j=>{$('soft').value=j.soft;$('softv').textContent=softLbl(j.soft);setSwitch('jOn',j.on)}).catch(()=>{});
 $('pos').oninput=()=>setPos($('pos').value);
 async function saveSync(btn){await api('sync?gate='+$('gate').value+'&sens='+$('sens').value+'&lead='+$('lead').value);flash(btn)}
 const eyeQ=()=>'eyes?color='+$('eyeColor').value.slice(1)+'&bright='+$('eyeB').value+'&mode='+$('eyeMode').value;
 async function saveEyes(btn){await api(eyeQ());flash(btn)}
 $('eyeB').oninput=()=>$('eyeBv').textContent=$('eyeB').value+'%';
-api('eyes').then(r=>r.json()).then(j=>{$('eyeColor').value='#'+j.color.toLowerCase();$('eyeB').value=j.bright;
+api('eyes').then(r=>r.json()).then(j=>{setSwitch('eOn',j.on);$('eyeColor').value='#'+j.color.toLowerCase();$('eyeB').value=j.bright;
  $('eyeBv').textContent=j.bright+'%';$('eyeMode').value=j.mode}).catch(()=>{});
 const candleQ=()=>'candles?count='+$('cCount').value+'&order='+$('cOrder').value+'&bright='+$('cB').value+'&mode='+$('cMode').value;
 async function saveCandles(btn){await api(candleQ());flash(btn)}
@@ -351,32 +381,42 @@ async function sendSpeed(v){if(cSBusy){cSNext=v;return}cSBusy=true;
  try{await api('candles?speed='+v)}catch(e){}cSBusy=false;if(cSNext!==null){const n=cSNext;cSNext=null;sendSpeed(n)}}
 $('cS').oninput=()=>{$('cSv').textContent=$('cS').value+'%';sendSpeed($('cS').value)};
 $('cVoice').onchange=()=>api('candles?voice='+($('cVoice').checked?1:0));
-api('candles').then(r=>r.json()).then(j=>{$('cCount').value=j.count;$('cOrder').value=j.order;
+api('candles').then(r=>r.json()).then(j=>{setSwitch('kOn',j.on);$('cCount').value=j.count;$('cOrder').value=j.order;
  $('cB').value=j.bright;$('cBv').textContent=j.bright+'%';$('cMode').value=j.mode;
  $('cS').value=j.speed;$('cSv').textContent=j.speed+'%';$('cVoice').checked=j.voice}).catch(()=>{});
 async function saveCal(btn){await api('cal?closed='+$('c').value+'&open='+$('o').value);flash(btn)}
 async function saveTurn(btn){await api('turn?on='+($('tOn').checked?1:0)+'&center='+$('tCenter').value+
  '&range='+$('tRange').value+'&lively='+($('tLively').checked?1:0));flash(btn)}
-api('turn').then(r=>r.json()).then(j=>{$('tOn').checked=j.enabled;$('tLively').checked=j.lively;
+api('turn').then(r=>r.json()).then(j=>{setSwitch('tOn',j.enabled);$('tLively').checked=j.lively;
  $('tCenter').value=j.center;$('tRange').value=j.range}).catch(()=>{});
 async function savePir(btn){await api('pir?on='+($('pOn').checked?1:0)+'&cooldown='+$('pCool').value);flash(btn)}
 async function pirPoll(){if(!$('setup').open)return;try{const j=await(await api('pir')).json();
  $('pState').textContent=(j.motion?'Ziet nu beweging. ':'Ziet nu niemand. ')+
   (j.ago<0?'Nog geen begroeting sinds het opstarten.':j.count+'× begroet, laatste keer '+j.ago+' s geleden.')}catch(e){}}
-api('pir').then(r=>r.json()).then(j=>{$('pOn').checked=j.enabled;$('pCool').value=j.cooldown;pirPoll()}).catch(()=>{});
+api('pir').then(r=>r.json()).then(j=>{setSwitch('pOn',j.enabled);$('pCool').value=j.cooldown;pirPoll()}).catch(()=>{});
 setInterval(pirPoll,2000);
 const led2Q=()=>'led2?count='+$('lCount').value+'&color='+$('lColor').value.slice(1)+'&bright='+$('lB').value+'&mode='+$('lMode').value;
 async function saveLed2(btn){await api(led2Q());flash(btn)}
+// Each group's on/off switch greys out (and locks) the settings under it.
+function syncSub(id){const on=$(id).checked,s=document.querySelector('.sub[data-for="'+id+'"]');if(!s)return;
+ s.classList.toggle('dim',!on);s.querySelectorAll('input,select,button').forEach(e=>e.disabled=!on)}
+function onSwitch(id,send){$(id).addEventListener('change',()=>{syncSub(id);send($(id).checked?1:0)})}
+function setSwitch(id,on){$(id).checked=on;syncSub(id)}
+const turnQ=()=>'turn?on='+($('tOn').checked?1:0)+'&center='+$('tCenter').value+'&range='+$('tRange').value+'&lively='+($('tLively').checked?1:0);
+onSwitch('aOn',v=>api('amps?on='+v));onSwitch('jOn',v=>api('jaw?on='+v));
+onSwitch('eOn',v=>api('eyes?on='+v));onSwitch('kOn',v=>api('candles?on='+v));
+onSwitch('lOn',v=>api('led2?on='+v));onSwitch('tOn',()=>api(turnQ()));
+onSwitch('pOn',v=>api('pir?on='+v+'&cooldown='+$('pCool').value));
 $('lB').oninput=()=>$('lBv').textContent=$('lB').value+'%';
 api('led2').then(r=>r.json()).then(j=>{$('lCount').value=j.count;$('lColor').value='#'+j.color.toLowerCase();
- $('lB').value=j.bright;$('lBv').textContent=j.bright+'%';$('lMode').value=j.mode}).catch(()=>{});
+ $('lB').value=j.bright;$('lBv').textContent=j.bright+'%';$('lMode').value=j.mode;setSwitch('lOn',j.on)}).catch(()=>{});
 $('aSleep').onchange=()=>api('amps?sleep='+($('aSleep').checked?1:0));
 $('aBass').onchange=()=>api('amps?bass='+$('aBass').value);
 function syncEcho(){const on=$('aEchoOn').checked;for(const id of ['aEcho','aEchoMs'])$(id).disabled=!on;
  document.querySelectorAll('.echobox').forEach(e=>e.classList.toggle('dim',!on))}
 const setEcho=()=>{syncEcho();api('amps?echoon='+($('aEchoOn').checked?1:0)+'&echo='+$('aEcho').value+'&echoms='+$('aEchoMs').value)};
 $('aEchoOn').onchange=setEcho;$('aEcho').onchange=setEcho;$('aEchoMs').onchange=setEcho;
-api('amps').then(r=>r.json()).then(j=>{$('aSleep').checked=j.sleep;$('aBass').value=j.bass;$('aEchoOn').checked=j.echoon;$('aEcho').value=j.echo;$('aEchoMs').value=j.echoms;syncEcho()}).catch(()=>{});
+api('amps').then(r=>r.json()).then(j=>{setSwitch('aOn',j.on);$('aSleep').checked=j.sleep;$('aBass').value=j.bass;$('aEchoOn').checked=j.echoon;$('aEcho').value=j.echo;$('aEchoMs').value=j.echoms;syncEcho()}).catch(()=>{});
 try{$('setup').open=localStorage.getItem('setup')==='1'}catch(e){}
 $('setup').ontoggle=()=>{try{localStorage.setItem('setup',$('setup').open?'1':'0')}catch(e){}};
 

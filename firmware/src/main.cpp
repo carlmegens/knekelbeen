@@ -65,9 +65,11 @@ static void setupServer() {
   server.on("/", [] { server.send(200, "text/html; charset=utf-8", PAGE); });
 
   server.on("/jaw", [] {
+    if (server.hasArg("on")) jaw::setOn(server.arg("on") == "1");
     if (server.hasArg("soft")) jaw::setSoftness(server.arg("soft").toInt());
     if (server.hasArg("pos")) jaw::setTarget(server.arg("pos").toFloat() / 100.0f);
-    server.send(200, "application/json", String("{\"soft\":") + jaw::softness() + "}");
+    server.send(200, "application/json", String("{\"on\":") + (jaw::isOn() ? "true" : "false") +
+                                                 ",\"soft\":" + jaw::softness() + "}");
   });
 
   server.on("/chatter", [] {
@@ -207,10 +209,12 @@ static void setupServer() {
       eyes::set(strtoul(server.arg("color").c_str(), nullptr, 16),
                 server.arg("bright").toInt(),
                 (eyes::Mode)server.arg("mode").toInt());
+    if (server.hasArg("on")) eyes::setOn(server.arg("on") == "1");
     if (server.hasArg("flash")) eyes::flash();
-    char buf[64];
-    snprintf(buf, sizeof buf, "{\"color\":\"%06X\",\"bright\":%d,\"mode\":%d}",
-             (unsigned)eyes::color(), eyes::brightness(), (int)eyes::mode());
+    char buf[80];
+    snprintf(buf, sizeof buf, "{\"on\":%s,\"color\":\"%06X\",\"bright\":%d,\"mode\":%d}",
+             eyes::isOn() ? "true" : "false", (unsigned)eyes::color(), eyes::brightness(),
+             (int)eyes::mode());
     server.send(200, "application/json", buf);
   });
 
@@ -219,6 +223,7 @@ static void setupServer() {
       candles::configure(server.arg("count").toInt(), server.arg("order"),
                          server.arg("bright").toInt(),
                          (candles::Mode)server.arg("mode").toInt());
+    if (server.hasArg("on")) candles::setOn(server.arg("on") == "1");
     if (server.hasArg("speed")) candles::setSpeed(server.arg("speed").toInt());
     if (server.hasArg("voice")) candles::setVoiceReact(server.arg("voice") == "1");
     String fx = server.arg("effect");
@@ -256,6 +261,7 @@ static void setupServer() {
   });
 
   server.on("/led2", [] {
+    if (server.hasArg("on")) led2::setOn(server.arg("on") == "1");
     if (server.hasArg("color"))
       led2::set(server.arg("count").toInt(),
                 strtoul(server.arg("color").c_str(), nullptr, 16),
@@ -264,6 +270,7 @@ static void setupServer() {
   });
 
   server.on("/amps", [] {
+    if (server.hasArg("on")) audio::setSoundOn(server.arg("on") == "1");
     if (server.hasArg("sleep")) audio::setAmpSleep(server.arg("sleep") == "1");
     if (server.hasArg("bass")) audio::setBassCut(server.arg("bass").toInt());
     if (server.hasArg("echoon") || server.hasArg("echo") || server.hasArg("echoms"))
@@ -271,7 +278,8 @@ static void setupServer() {
                      server.hasArg("echo") ? server.arg("echo").toInt() : audio::echo(),
                      server.hasArg("echoms") ? server.arg("echoms").toInt() : audio::echoMs());
     server.send(200, "application/json",
-                String("{\"sleep\":") + (audio::ampSleepOn() ? "true" : "false") +
+                String("{\"on\":") + (audio::soundIsOn() ? "true" : "false") +
+                    ",\"sleep\":" + (audio::ampSleepOn() ? "true" : "false") +
                     ",\"bass\":" + audio::bassCut() + ",\"echoon\":" + (audio::echoEnabled() ? "true" : "false") +
                     ",\"echo\":" + audio::echo() +
                     ",\"echoms\":" + audio::echoMs() + "}");

@@ -49,7 +49,17 @@ struct Envelope {
 
 // ---------- amps ----------
 // The amps sleep while nothing plays, so they can't hum or hiss.
+static volatile bool soundOn = true;  // off: the amps stay in shutdown
+
+static void ampsShutdown() {
+  pinMode(PIN_AMP_L_SD, OUTPUT);
+  pinMode(PIN_AMP_R_SD, OUTPUT);
+  digitalWrite(PIN_AMP_L_SD, LOW);
+  digitalWrite(PIN_AMP_R_SD, LOW);
+}
+
 static void ampsOn() {
+  if (!soundOn) return ampsShutdown();
   pinMode(PIN_AMP_L_SD, INPUT);
   pinMode(PIN_AMP_R_SD, INPUT);
   if (ampSleep) vTaskDelay(pdMS_TO_TICKS(10));  // wake-up time
@@ -57,10 +67,7 @@ static void ampsOn() {
 
 static void ampsOff() {
   if (!ampSleep) return ampsOn();
-  pinMode(PIN_AMP_L_SD, OUTPUT);
-  pinMode(PIN_AMP_R_SD, OUTPUT);
-  digitalWrite(PIN_AMP_L_SD, LOW);
-  digitalWrite(PIN_AMP_R_SD, LOW);
+  ampsShutdown();
 }
 
 // ---------- I2S ----------
@@ -454,6 +461,7 @@ void begin() {
   cfg.sensitivity = prefs.getInt("sens", 60);
   cfg.leadMs = prefs.getInt("lead", 100);
   ampSleep = prefs.getBool("ampsleep", true);
+  soundOn = prefs.getBool("soundon", true);
   bassCutHz = prefs.getInt("basscut", 250);
   echoOn = prefs.getBool("echoon", false);
   echoPct = prefs.getInt("echo", 30);
@@ -553,6 +561,14 @@ void setAmpSleep(bool on) {
   if (!playing) ampsOff();  // applies right away (stays on if sleep is off)
 }
 bool ampSleepOn() { return ampSleep; }
+
+void setSoundOn(bool on) {
+  soundOn = on;
+  prefs.putBool("soundon", on);
+  if (playing) ampsOn();
+  else ampsOff();
+}
+bool soundIsOn() { return soundOn; }
 
 void setBassCut(int hz) {
   bassCutHz = constrain(hz, 0, 750);

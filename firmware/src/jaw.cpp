@@ -33,6 +33,7 @@ static volatile int calClosed = JAW_CLOSED_DEG_DEFAULT;
 static volatile int calOpen = JAW_OPEN_DEG_DEFAULT;
 static volatile uint32_t chatterUntil = 0;
 static volatile int rawDeg = -1;
+static volatile bool enabled = true;  // off: servo slack, target() still follows the voice
 
 // The jaw follows its target like a critically damped spring: it speeds up
 // gently, slows down before it arrives and never overshoots, so it doesn't
@@ -71,7 +72,15 @@ static void jawTask(void *) {
       if (pos > 1) pos = 1, vel = 0;
     }
     float deg = (rawDeg >= 0) ? rawDeg : calClosed + (calOpen - calClosed) * pos;
-    if (fabsf(deg - lastDeg) >= 0.05f) {
+    if (!enabled && rawDeg < 0) {
+      if (attached) {
+        servo::write(calClosed);  // close it before letting go
+        vTaskDelay(pdMS_TO_TICKS(300));
+        servo::detach();
+        attached = false;
+      }
+      lastDeg = -1;
+    } else if (fabsf(deg - lastDeg) >= 0.05f) {
       if (!attached) {
         servo::attach(deg);
         attached = true;
@@ -95,6 +104,7 @@ void begin() {
   calClosed = prefs.getInt("closed", JAW_CLOSED_DEG_DEFAULT);
   calOpen = prefs.getInt("open", JAW_OPEN_DEG_DEFAULT);
   softMs = prefs.getInt("soft", JAW_SOFT_MS_DEFAULT);
+  enabled = prefs.getBool("on", true);
 
   servo::attach(calClosed);
 
@@ -125,6 +135,12 @@ void setSoftness(int ms) {
 }
 
 int softness() { return softMs; }
+
+void setOn(bool on) {
+  enabled = on;
+  prefs.putBool("on", on);
+}
+bool isOn() { return enabled; }
 
 void chatter(uint32_t ms) {
   rawDeg = -1;

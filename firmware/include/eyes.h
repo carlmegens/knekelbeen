@@ -12,6 +12,8 @@ void set(uint32_t rgb, int brightness, Mode mode);  // persisted
 uint32_t color();
 int brightness();  // 0..100
 Mode mode();
+void setOn(bool on);  // persisted; keeps the other settings
+bool isOn();
 void flash();      // short bright flash (test)
 
 }  // namespace eyes

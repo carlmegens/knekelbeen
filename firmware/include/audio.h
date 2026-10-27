@@ -30,6 +30,10 @@ int volume();
 void setAmpSleep(bool on);
 bool ampSleepOn();
 
+// Off: nothing comes out of the speakers (the jaw and lights still play along). Persisted.
+void setSoundOn(bool on);
+bool soundIsOn();
+
 // High-pass for the small speaker: tones below this (Hz) are cut. 0 = off. Persisted.
 void setBassCut(int hz);
 int bassCut();

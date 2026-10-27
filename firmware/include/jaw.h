@@ -24,6 +24,10 @@ void setRawDeg(int deg);
 void setSoftness(int ms);
 int softness();
 
+// Off: the jaw stays shut and the servo slack; the lights still follow the voice.
+void setOn(bool on);  // persisted
+bool isOn();
+
 // Demo: random speech-like chatter for `ms` milliseconds.
 void chatter(uint32_t ms);
 
