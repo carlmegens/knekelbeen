@@ -110,7 +110,10 @@ localhost, daarom draait de bediening met AI op de laptop. Met `SKULL=<ip>`
 wijs je een andere schedel aan.
 
 Handige omgevingsvariabelen: `SKULL_GEMINI_MODEL`, `SKULL_GEMINI_VOICE`,
-`SKULL_WHISPER` en voor de Claude-modus `ANTHROPIC_API_KEY`.
+`SKULL_WHISPER` en voor de Claude-modus `ANTHROPIC_API_KEY`. Met
+`SKULL_CAM` en `SKULL_CAM_KEY` (een Thingino-camera bij de deur) ziet
+Knekelbeen de kinderen bij de begroeting; zie
+[`docs/vision-plan.md`](docs/vision-plan.md).
 
 ### 3. Clips en effecten
 

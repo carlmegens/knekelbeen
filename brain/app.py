@@ -41,6 +41,7 @@ import ai  # noqa: E402  (needs the environment loaded first)
 import gemini  # noqa: E402
 import designed  # noqa: E402
 import headless  # noqa: E402
+import ha  # noqa: E402
 CLIPS = ROOT / "clips"
 RAW = CLIPS / "raw"
 SKULL = os.environ.get("SKULL", "192.168.2.125")
@@ -420,10 +421,18 @@ async def announce(_app) -> None:
     _app["announcer"] = asyncio.create_task(loop())
 
 
+HA_STATUS = {"state": "uit"}
+
+
 async def watch_pir(_app) -> None:
     """Polls the skull's PIR counter; a new arrival lets a running AI session
     greet them. (Polling, because the laptop firewall keeps the skull from
-    calling in.)"""
+    calling in.) With Home Assistant configured, its presence sensors are the
+    trigger instead."""
+    if ha.configured():
+        _app["pir_watch"] = asyncio.create_task(ha.listen(gemini.note_visitor, HA_STATUS))
+        return
+
     async def loop():
         last = None
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(2)) as s:
@@ -560,7 +569,7 @@ async def ai_status(_: web.Request) -> web.Response:
         voices = gemini.VOICES_ALL if designed.available() else gemini.VOICES
         return web.json_response({"has_key": True, "engine": "gemini",
                                   "model": gemini.MODEL, "voices": voices,
-                                  "voice": gemini.DEFAULT_VOICE})
+                                  "voice": gemini.DEFAULT_VOICE, "ha": HA_STATUS["state"]})
     has_key = bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
     return web.json_response({"has_key": has_key, "engine": "claude", "model": ai.MODEL,
                               "whisper": ai.WHISPER_SIZE})

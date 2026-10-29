@@ -35,6 +35,20 @@ _primary_failed_at = 0.0  # last time MODEL failed; shared by all sessions
 # restarts fresh, and the skull greets them before they say anything.
 VISITOR_GREETING = ("[bewegingssensor] Er komt net iemand bij je staan. Begroet "
                     "ze kort en griezelig-vriendelijk, in één of twee zinnen.")
+# With the door camera, the greeting comes with a snapshot so even his first
+# sentence is about their costumes. Sent as content: Live ignores a single
+# realtime video frame. No effect call first: that delayed the voice by ~1 s,
+# and the skull flashes its eyes on motion anyway.
+VISITOR_GREETING_SEEN = (
+    "[camera] Er komen net bezoekers bij je staan; dit is wat je ziet. Begroet ze in "
+    "één of twee korte zinnen en noem daarbij meteen iets concreets dat je ziet: hun "
+    "kostuum, masker, hoed, attribuut of hoeveel het er zijn. Verzin niets wat je niet "
+    "ziet. Is het beeld zwart-wit (infrarood), noem dan geen kleuren. Begin meteen te "
+    "praten; gebruik bij deze begroeting geen speciaal_effect.")
+# Thingino camera at the door; its API key goes as ?token= (the camera's web
+# server drops the X-API-Key header). Full 2304x1296 JPEG, ~0.4 s.
+CAM = os.environ.get("SKULL_CAM", "")
+CAM_KEY = os.environ.get("SKULL_CAM_KEY", "")
 VISITOR_TALKING_S = 12   # quieter than this = still talking with the last group
 VISITOR_EXPIRES_S = 20   # a greeting that couldn't happen by then is dropped
 _visitor = {"at": 0.0}   # last motion, shared by all sessions
@@ -42,6 +56,21 @@ _visitor = {"at": 0.0}   # last motion, shared by all sessions
 
 def note_visitor() -> None:
     _visitor["at"] = time.monotonic()
+
+
+async def snapshot() -> bytes | None:
+    """A fresh JPEG from the door camera, or None (no camera, or no answer).
+    Images are never stored; they only go into the Gemini session."""
+    if not (CAM and CAM_KEY):
+        return None
+    try:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(2)) as s:
+            async with s.get(f"http://{CAM}/x/ch0.jpg", params={"token": CAM_KEY}) as r:
+                if r.status == 200 and r.content_type == "image/jpeg":
+                    return await r.read()
+    except (aiohttp.ClientError, asyncio.TimeoutError):
+        pass  # no camera: greet without seeing them
+    return None
 
 
 def current_model() -> str:
@@ -370,10 +399,15 @@ async def converse(session, mic_q, speaker, fx, gate, control, event, ws) -> Non
                     control["restart"] = True  # new group: fresh conversation
                 continue  # the new session greets them
             seen = at
-            await event(type="effect", text="begroeting")
+            image = await snapshot()
+            if image:
+                parts = [types.Part(inline_data=types.Blob(data=image, mime_type="image/jpeg")),
+                         types.Part(text=VISITOR_GREETING_SEEN)]
+            else:
+                parts = [types.Part(text=VISITOR_GREETING)]
+            await event(type="effect", text="begroeting met camera" if image else "begroeting")
             await session.send_client_content(
-                turns=types.Content(role="user", parts=[types.Part(text=VISITOR_GREETING)]),
-                turn_complete=True)
+                turns=types.Content(role="user", parts=parts), turn_complete=True)
             turn["last"] = time.monotonic()
 
     async def watchdog():

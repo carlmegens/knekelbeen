@@ -98,7 +98,7 @@
 <details id="setup"><summary>&#9881; Instellingen</summary>
 <div class="cols">
 <h2 class="cat wide">&#128264; Geluid</h2>
-<div class="grp">
+<div class="grp one">
  <h3>Stem</h3>
  <label class="tog"><input id="aEchoOn" type="checkbox"> Echo</label>
  <label class="echobox">Sterkte
@@ -109,7 +109,7 @@
   <span class="ends"><span>Holle schedel</span><span>Grote kelder</span></span></label>
  <span class="help">Galm op alles wat de schedel afspeelt: clips, effecten en de AI.</span>
 </div>
-<div class="grp">
+<div class="grp one">
  <h3>Versterkers</h3>
  <label class="tog"><input id="aOn" type="checkbox"> Geluid aan
   <span class="help">Uit: er komt geen geluid uit de speaker. De kaak en de lichten doen wel mee.</span></label>
@@ -428,7 +428,7 @@ loadClips();
 // ---- wide screens: masonry, and long boxes go two columns wide ----
 // Each box spans as many 4 px grid rows as it is tall, so short boxes don't
 // leave holes; a box taller than most of the screen spans two columns and
-// lays its own content out in two columns.
+// lays its own content out in two columns (not .one: those stay narrow).
 for(const d of document.querySelectorAll('.cols>details')){
  const b=document.createElement('div');b.className='body';
  b.append(...[...d.childNodes].filter(n=>n.nodeName!=='SUMMARY'));d.append(b)}
@@ -438,7 +438,7 @@ function layout(){
   const ncol=grid?getComputedStyle(g).gridTemplateColumns.split(' ').length:1;
   for(const el of g.children){
    if(!grid){el.style.gridRowEnd='';el.classList.remove('tall');continue}
-   if(!el.classList.contains('wide')){
+   if(!el.matches('.wide,.one')){
     const was=el.classList.contains('tall');el.classList.remove('tall');
     const tall=ncol>=2&&el.offsetHeight>innerHeight*.75;
     el.classList.toggle('tall',tall);

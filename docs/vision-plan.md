@@ -1,6 +1,36 @@
 # Vision plan: the skull sees its visitors
 
-Status: plan, not built yet (2026-10-04).
+Status: first version built (2026-10-29), simpler than the plan below.
+
+## What's built (2026-10-29)
+
+- **Camera:** an Eufy T8400 on Thingino (T31X, SC3235, 2304x1296) at the
+  door, `SKULL_CAM` and `SKULL_CAM_KEY` in `.env`. Snapshot:
+  `http://<cam>/x/ch0.jpg?token=<key>` (~0.4 s); the camera's web server
+  drops the `X-API-Key` header, so the key goes in the query.
+- **Gemini sees the image itself, no Ollama:** when the PIR fires, the
+  greeting goes to Gemini Live as content with the snapshot attached
+  (`VISITOR_GREETING_SEEN` in `gemini.py`). First audio ~1.1–1.8 s after
+  sending. Tested 2026-10-29: it names what it sees (glasses, headphones),
+  in colour and in black-and-white.
+- **What didn't work:** a single frame via `send_realtime_input(video=...)`;
+  the model says it can't see anything. A vague prompt gives generic
+  greetings ("wat een kostuums"); the prompt now demands something concrete.
+  Letting it call `speciaal_effect` first cost ~1 s, so the greeting asks
+  for none.
+- **Night:** black-and-white IR is fine (shapes beat a dark colour image);
+  the prompt says not to name colours in an IR image.
+- **Privacy trade-off:** the children's faces now go to Google (their voices
+  already did). Paid key, no images stored by the app, sign at the door.
+- **Trigger via Home Assistant** (`brain/ha.py`): with `HA_URL`, `HA_TOKEN`
+  and `HA_VISITOR_ENTITIES` in `.env`, the app listens on HA's WebSocket API
+  for the mmWave presence and Frigate person sensors instead of polling the
+  skull's PIR. A sensor turning on, or a person count going up, is a new
+  arrival. Without entities it prints the candidate sensors.
+- **Still open:** a fresh image later in the conversation ("raad eens wat
+  ik ben?"), and tuning the camera (timestamp off, GOP 1 s, IR at night).
+
+The original plan follows.
 
 ## Goal
 
