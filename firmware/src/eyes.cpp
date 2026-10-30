@@ -18,6 +18,7 @@ static volatile uint32_t rgb = 0xFF2000;  // ember red-orange
 static volatile int bright = 80;
 static volatile Mode currentMode = AUTO;
 static volatile uint32_t flashUntil = 0;
+static volatile uint32_t tintRgb = 0, tintUntil = 0;
 static volatile bool enabled = true;
 
 static void eyesTask(void *) {
@@ -43,8 +44,8 @@ static void eyesTask(void *) {
     float k = level * bright / 100.0f;
     // Squared for perceptually smoother fades at low brightness.
     k *= k;
-    eye.setPixelColor(0, ((rgb >> 16) & 0xFF) * k, ((rgb >> 8) & 0xFF) * k,
-                      (rgb & 0xFF) * k);
+    uint32_t c = now < tintUntil ? tintRgb : rgb;
+    eye.setPixelColor(0, ((c >> 16) & 0xFF) * k, ((c >> 8) & 0xFF) * k, (c & 0xFF) * k);
     eye.show();
     led2::render();
     vTaskDelayUntil(&last, period);
@@ -85,5 +86,9 @@ void setOn(bool on) {
 }
 bool isOn() { return enabled; }
 void flash() { flashUntil = millis() + 300; }
+void tint(uint32_t c, uint32_t ms) {
+  tintRgb = c & 0xFFFFFF;
+  tintUntil = millis() + ms;
+}
 
 }  // namespace eyes

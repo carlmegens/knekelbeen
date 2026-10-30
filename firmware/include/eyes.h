@@ -15,5 +15,6 @@ Mode mode();
 void setOn(bool on);  // persisted; keeps the other settings
 bool isOn();
 void flash();      // short bright flash (test)
+void tint(uint32_t rgb, uint32_t ms);  // other colour for a while (not saved)
 
 }  // namespace eyes

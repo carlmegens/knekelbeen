@@ -229,7 +229,10 @@ static void setupServer() {
     String fx = server.arg("effect");
     if (fx == "out") candles::trigger(candles::BLOW_OUT);
     else if (fx == "flare") candles::trigger(candles::FLARE);
-    else if (fx == "ghost") candles::trigger(candles::GHOST);
+    else if (fx == "ghost") {
+      candles::trigger(candles::GHOST);
+      eyes::tint(0x28FF5A, 6000);  // the eyes turn the same eerie green
+    }
     else if (fx == "test") candles::trigger(candles::TEST);
     server.send(200, "application/json", candles::json());
   });

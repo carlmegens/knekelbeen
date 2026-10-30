@@ -65,6 +65,23 @@ Deze revisie is digitaal gecontroleerd, maar niet gesliced of fysiek proefgeprin
 Print eerst één kaars met jouw printer en filament. De exacte printtijd volgt uit
 je slicer; de percentages in de tabel zijn geen voorspelling van de tijdwinst.
 
+## Aansluiten
+
+Op de schroefklem KAARSEN van de print, pin 1 tot 4 (bij dit snoer: wit is
+data, groen is klok):
+
+| Pin | Signaal | Draad |
+|---|---|---|
+| 1 | +5V | rood |
+| 2 | data (GPIO 11) | wit |
+| 3 | klok (GPIO 12) | groen |
+| 4 | GND | blauw |
+
+Andere snoeren gebruiken soms andere kleuren (bij Adafruit is geel de data).
+Kijk bij twijfel naar DI/CI op het eerste printje; de pijltjes wijzen van de
+schedel af. Data en klok omwisselen kan geen kwaad, +5V en GND wel. Met Test
+op de bedieningspagina gaan de kaarsen één voor één wit aan.
+
 ## Bestanden
 
 - stl/: uitsluitend de vijf kaarslichamen, in mm en in printoriëntatie.
