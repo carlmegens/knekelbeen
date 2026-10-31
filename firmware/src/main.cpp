@@ -34,6 +34,7 @@ static void ghost() {
 
 // Light cues inside a clip; the same names as the AI's speciaal_effect.
 static void lightCue(const char *name) {
+  scene::note(name);  // the laptop lets the outdoor lamps join in
   if (!strcmp(name, "kaarsen_op")) candles::trigger(candles::FLARE);
   else if (!strcmp(name, "kaarsen_uit")) candles::trigger(candles::BLOW_OUT);
   else if (!strcmp(name, "spookgroen")) ghost();
@@ -253,12 +254,12 @@ static void setupServer() {
     if (server.hasArg("voice")) candles::setVoiceReact(server.arg("voice") == "1");
     if (server.hasArg("visit")) candles::setVisitBright(server.arg("visit").toInt());
     String fx = server.arg("effect");
-    if (fx == "out") candles::trigger(candles::BLOW_OUT);
-    else if (fx == "flare") candles::trigger(candles::FLARE);
-    else if (fx == "ghost") ghost();
+    if (fx == "out") lightCue("kaarsen_uit");
+    else if (fx == "flare") lightCue("kaarsen_op");
+    else if (fx == "ghost") lightCue("spookgroen");
     else if (fx == "test") candles::trigger(candles::TEST);
-    else if (fx == "strike") scene::strike();
-    else if (fx == "thunder") scene::thunder();
+    else if (fx == "strike") lightCue("bliksem");
+    else if (fx == "thunder") lightCue("donder");
     server.send(200, "application/json", candles::json());
   });
 
@@ -328,6 +329,12 @@ static void setupServer() {
       led2::setBowl(server.arg("bcount").toInt(), strtoul(server.arg("bcolor").c_str(), nullptr, 16),
                     server.arg("bbright").toInt(), (led2::Mode)server.arg("bmode").toInt(),
                     strtoul(server.arg("ccolor").c_str(), nullptr, 16), server.arg("csecs").toInt() * 1000);
+    if (server.hasArg("pcount"))
+      led2::setPumpkin(server.arg("pcount").toInt(), strtoul(server.arg("pcolor").c_str(), nullptr, 16),
+                       server.arg("pbright").toInt(), (led2::Mode)server.arg("pmode").toInt(),
+                       strtoul(server.arg("pvcolor").c_str(), nullptr, 16),
+                       server.arg("pvbright").toInt(), (led2::Mode)server.arg("pvmode").toInt(),
+                       server.arg("pfx") == "1");
     if (server.hasArg("candy")) led2::candy();
     server.send(200, "application/json", led2::json());
   });

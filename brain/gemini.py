@@ -44,8 +44,12 @@ VISITOR_GREETING_SEEN = (
     "één of twee korte zinnen en noem daarbij meteen iets concreets dat je ziet: hun "
     "kostuum, masker, hoed, attribuut of hoeveel het er zijn. Zie je volwassenen, "
     "spreek die dan niet als kinderen aan. Verzin niets wat je niet "
-    "ziet. Is het beeld zwart-wit (infrarood), noem dan geen kleuren. Begin meteen te "
-    "praten; gebruik bij deze begroeting geen speciaal_effect.")
+    "ziet. Let op: de kleuren op dit beeld kloppen niet. In het donker is het "
+    "infrarood (zwart-wit, een zwarte hoed lijkt dan wit) of kleurt het paarse en "
+    "roze buitenlicht alles roze. Noem daarom geen enkele kleur (ook geen wit, zwart "
+    "of grijs) en praat over vormen: een puntige hoed, een cape, een masker, een "
+    "bezem, een lampion. Begin meteen te praten; gebruik bij deze begroeting geen "
+    "speciaal_effect.")
 # Thingino camera at the door; its API key goes as ?token= (the camera's web
 # server drops the X-API-Key header). Full 2304x1296 JPEG, ~0.4 s.
 CAM = os.environ.get("SKULL_CAM", "")

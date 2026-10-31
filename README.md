@@ -135,7 +135,15 @@ anders speelt hij zonder effecten.
 
 Clips worden opgeslagen als 22,05 kHz mono en op loudness genormaliseerd.
 
-### 4. Microfoon testen
+### 4. Instellingen bewaren
+
+```
+tools/settings.py              # wat staat aan en uit
+tools/settings.py --save       # alles naar config/instellingen.json
+tools/settings.py --restore    # en weer terug, bijvoorbeeld na een nieuwe flash
+```
+
+### 5. Microfoon testen
 
 ```
 tools/mic_test.py            # 4 s stil, dan 6 s praten: ruis, verschil, storingen

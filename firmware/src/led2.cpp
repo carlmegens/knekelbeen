@@ -22,7 +22,10 @@ static volatile int count = 1;
 static Look rest = {0xFF2000, 60, VOICE};
 static Look visit = {0xFFC080, 80, ON};  // extra light on the visitors
 static volatile bool effects = true;
-static volatile int bowlN = 0;  // candy bowl LEDs, after the others
+static volatile int pumpN = 0;  // pumpkin LEDs, after the main ones
+static Look pumpRest = {0xFF5000, 40, FLAME}, pumpVisit = {0xFF7000, 90, FLAME};
+static volatile bool pumpFx = true;
+static volatile int bowlN = 0;  // candy bowl LEDs, after the pumpkin
 static Look bowl = {0xFF6000, 10, BREATHE};
 static volatile uint32_t candyRgb = 0xFFD890;
 static volatile int candyMs = 15000;
@@ -41,6 +44,10 @@ void begin() {
   if (rest.mode == OFF) rest.mode = VOICE, enabled = false;  // "Uit" used to be a mode
   visit = {prefs.getUInt("vrgb", 0xFFC080), prefs.getInt("vbright", 80), validMode(prefs.getInt("vmode", ON))};
   effects = prefs.getBool("fx", true);
+  pumpN = constrain(prefs.getInt("pcount", 0), 0, MAX_LEDS / 2);
+  pumpRest = {prefs.getUInt("prgb", 0xFF5000), prefs.getInt("pbright", 40), validMode(prefs.getInt("pmode", FLAME))};
+  pumpVisit = {prefs.getUInt("pvrgb", 0xFF7000), prefs.getInt("pvbright", 90), validMode(prefs.getInt("pvmode", FLAME))};
+  pumpFx = prefs.getBool("pfx", true);
   bowlN = constrain(prefs.getInt("bcount", 0), 0, MAX_LEDS / 2);
   bowl = {prefs.getUInt("brgb", 0xFF6000), prefs.getInt("bbright", 10), validMode(prefs.getInt("bmode", BREATHE))};
   candyRgb = prefs.getUInt("crgb", 0xFFD890);
@@ -49,7 +56,9 @@ void begin() {
 }
 
 // Shared animation state; both looks read it, so a fade between them stays smooth.
-static float glow = 0, idle = 0, flick[2 * MAX_LEDS], spin = 0;
+// flick: main LEDs from 0, bowl from MAX_LEDS, pumpkin from BOWL_END.
+static const int BOWL_END = MAX_LEDS + MAX_LEDS / 2;
+static float glow = 0, idle = 0, flick[2 * MAX_LEDS], spin = 0;  // spin: 0..1 of a lap
 
 // One look into out[i] = r, g, b (0..255, after brightness); `off` picks
 // the segment's own flicker values.
@@ -61,7 +70,7 @@ static void draw(const Look &l, int n, uint32_t now, float out[][3], int off = 0
       case ON: level = 1; break;
       case FLICKER: level = flick[off + i]; break;
       case SPIN: {  // a comet with a tail; one lap in 3 s, faster while talking
-        float behind = spin - i;
+        float behind = spin * n - i;
         if (behind < 0) behind += n;
         float tail = behind < n * 0.4f ? 1 - behind / (n * 0.4f) : 0;
         level = 0.15f + 0.85f * tail * tail;
@@ -144,13 +153,27 @@ static void drawBowl(int n, uint32_t now, float out[][3]) {
   }
 }
 
+// A part with a quiet and a visit look, blended by presence, plus effects.
+static void drawPart(const Look &r, const Look &v, bool fx, int n, int off, float p, uint32_t now,
+                     float out[][3], float tmp[][3]) {
+  draw(r, n, now, out, off);
+  if (p > 0.001f) {
+    draw(v, n, now, tmp, off);
+    for (int i = 0; i < n; i++) blend(out[i], tmp[i][0], tmp[i][1], tmp[i][2], p);
+  }
+  if (fx) {
+    float top = (r.bright + (v.bright - r.bright) * p) / 100.0f;
+    joinEffects(n, now, out, top * top);
+  }
+}
+
 void render() {
   static float a[MAX_LEDS][3], b[MAX_LEDS][3], c[MAX_LEDS][3];
   if (resize) {
     resize = false;
     strip.clear();
     strip.show();  // blank the old length first
-    strip.updateLength(count + bowlN);
+    strip.updateLength(count + pumpN + bowlN);
     for (float &f : flick) f = 1;
   }
   uint32_t now = millis();
@@ -162,27 +185,24 @@ void render() {
   int nb = bowlN;
   for (int i = 0; i < n; i++) flick[i] += ((random(55, 101) / 100.0f) - flick[i]) * 0.3f;
   for (int i = 0; i < nb; i++) flick[MAX_LEDS + i] += ((random(55, 101) / 100.0f) - flick[MAX_LEDS + i]) * 0.3f;
-  spin += n * (1 + 3 * glow) / (3.0f * 50);  // render() runs 50x a second
-  if (spin >= n) spin -= n;
+  int np = pumpN;
+  for (int i = 0; i < np; i++) flick[BOWL_END + i] += ((random(55, 101) / 100.0f) - flick[BOWL_END + i]) * 0.3f;
+  spin += (1 + 3 * glow) / (3.0f * 50);  // render() runs 50x a second
+  if (spin >= 1) spin -= 1;
 
   float p = scene::presence();
   if (!enabled) {
     strip.fill(0);
   } else {
-    Look r = rest, v = visit;
-    draw(r, n, now, a);
-    if (p > 0.001f) {
-      draw(v, n, now, b);
-      for (int i = 0; i < n; i++) blend(a[i], b[i][0], b[i][1], b[i][2], p);
-    }
-    if (effects) {
-      float top = (r.bright + (v.bright - r.bright) * p) / 100.0f;
-      joinEffects(n, now, a, top * top);
-    }
+    drawPart(rest, visit, effects, n, 0, p, now, a, b);
     for (int i = 0; i < n; i++) strip.setPixelColor(i, a[i][0], a[i][1], a[i][2]);
+    if (np) {
+      drawPart(pumpRest, pumpVisit, pumpFx, np, BOWL_END, p, now, a, b);
+      for (int i = 0; i < np; i++) strip.setPixelColor(n + i, a[i][0], a[i][1], a[i][2]);
+    }
     if (nb) {
       drawBowl(nb, now, c);
-      for (int i = 0; i < nb; i++) strip.setPixelColor(n + i, c[i][0], c[i][1], c[i][2]);
+      for (int i = 0; i < nb; i++) strip.setPixelColor(n + np + i, c[i][0], c[i][1], c[i][2]);
     }
   }
   strip.show();
@@ -226,6 +246,23 @@ void setBowl(int n, uint32_t c, int br, Mode m, uint32_t cc, int cms) {
   prefs.putInt("cms", candyMs);
 }
 
+void setPumpkin(int n, uint32_t c, int br, Mode m, uint32_t vc, int vbr, Mode vm, bool fx) {
+  n = constrain(n, 0, MAX_LEDS / 2);
+  if (n != pumpN) resize = true;
+  pumpN = n;
+  pumpRest = {c & 0xFFFFFF, constrain(br, 0, 100), validMode(m)};
+  pumpVisit = {vc & 0xFFFFFF, constrain(vbr, 0, 100), validMode(vm)};
+  pumpFx = fx;
+  prefs.putInt("pcount", pumpN);
+  prefs.putUInt("prgb", pumpRest.rgb);
+  prefs.putInt("pbright", pumpRest.bright);
+  prefs.putInt("pmode", pumpRest.mode);
+  prefs.putUInt("pvrgb", pumpVisit.rgb);
+  prefs.putInt("pvbright", pumpVisit.bright);
+  prefs.putInt("pvmode", pumpVisit.mode);
+  prefs.putBool("pfx", pumpFx);
+}
+
 void candy() {
   candyStart = millis() - (candyOn ? 300 : 0);  // already lit: stay bright, restart the time
   candyOn = true;
@@ -237,15 +274,19 @@ void setOn(bool on) {
 }
 
 String json() {
-  char buf[320];
+  char buf[480];
   snprintf(buf, sizeof buf,
            "{\"on\":%s,\"count\":%d,\"color\":\"%06X\",\"bright\":%d,\"mode\":%d,"
            "\"vcolor\":\"%06X\",\"vbright\":%d,\"vmode\":%d,\"fx\":%s,"
            "\"bcount\":%d,\"bcolor\":\"%06X\",\"bbright\":%d,\"bmode\":%d,"
-           "\"ccolor\":\"%06X\",\"csecs\":%d}",
+           "\"ccolor\":\"%06X\",\"csecs\":%d,"
+           "\"pcount\":%d,\"pcolor\":\"%06X\",\"pbright\":%d,\"pmode\":%d,"
+           "\"pvcolor\":\"%06X\",\"pvbright\":%d,\"pvmode\":%d,\"pfx\":%s}",
            enabled ? "true" : "false", count, (unsigned)rest.rgb, rest.bright, (int)rest.mode,
            (unsigned)visit.rgb, visit.bright, (int)visit.mode, effects ? "true" : "false",
-           bowlN, (unsigned)bowl.rgb, bowl.bright, (int)bowl.mode, (unsigned)candyRgb, candyMs / 1000);
+           bowlN, (unsigned)bowl.rgb, bowl.bright, (int)bowl.mode, (unsigned)candyRgb, candyMs / 1000,
+           pumpN, (unsigned)pumpRest.rgb, pumpRest.bright, (int)pumpRest.mode,
+           (unsigned)pumpVisit.rgb, pumpVisit.bright, (int)pumpVisit.mode, pumpFx ? "true" : "false");
   return buf;
 }
 

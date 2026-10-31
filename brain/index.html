@@ -288,7 +288,21 @@
   <input id="lVColor" type="color" value="#ffc080" aria-label="Kleur van LED 2 bij bezoek"></div>
  <label>Helderheid <span id="lVBv"></span>
   <input id="lVB" type="range" min="0" max="100" aria-label="Helderheid van LED 2 bij bezoek"></label>
- <p class="help" style="margin:0"><b>Snoepschaal</b>: ledjes die na de andere in dezelfde ketting komen</p>
+ <p class="help" style="margin:0"><b>Pompoen</b>: ledjes die na de bovenste in dezelfde ketting komen</p>
+ <label>Ledjes in de pompoen <input id="lPCount" type="number" min="0" max="30">
+  <span class="help">0 = geen pompoen.</span></label>
+ <div class="row"><span style="min-width:5.5em">Rustig</span><select id="lPMode" aria-label="Werking van de pompoen als het rustig is">
+   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="7">Kaarsvlam</option><option value="6">Ademen</option><option value="4">Draaien</option><option value="5">Stemmeter</option></select>
+  <input id="lPColor" type="color" value="#ff5000" aria-label="Kleur van de pompoen als het rustig is"></div>
+ <label>Helderheid <span id="lPBv"></span>
+  <input id="lPB" type="range" min="0" max="100" aria-label="Helderheid van de pompoen als het rustig is"></label>
+ <div class="row"><span style="min-width:5.5em">Bij bezoek</span><select id="lPVMode" aria-label="Werking van de pompoen bij bezoek">
+   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="7">Kaarsvlam</option><option value="6">Ademen</option><option value="4">Draaien</option><option value="5">Stemmeter</option></select>
+  <input id="lPVColor" type="color" value="#ff7000" aria-label="Kleur van de pompoen bij bezoek"></div>
+ <label>Helderheid <span id="lPVBv"></span>
+  <input id="lPVB" type="range" min="0" max="100" aria-label="Helderheid van de pompoen bij bezoek"></label>
+ <label><input id="lPFx" type="checkbox"> Pompoen doet mee met effecten</label>
+ <p class="help" style="margin:0"><b>Snoepschaal</b>: ledjes die daarna in dezelfde ketting komen</p>
  <label>Ledjes boven de snoepschaal <input id="lBCount" type="number" min="0" max="30">
   <span class="help">0 = geen snoepschaal.</span></label>
  <div class="row"><select id="lBMode" aria-label="Werking van de snoepschaal">
@@ -329,6 +343,19 @@
   <button class="sm neutral" onclick="api('smoke?test=small');setTimeout(smokePoll,1500)">Beetje rook</button>
   <button class="sm neutral" onclick="api('smoke?test=big');setTimeout(smokePoll,1500)">Veel rook</button></div>
  <span class="help">Een Shelly 1 met de HomeKit-firmware die zo lang het rookknopje indrukt. Clips (zoals het orgel bij de deurbel) en de AI geven rook met de effecten rook en veel_rook. De knoppen hier negeren de wachttijd.</span>
+</div>
+</details>
+<details class="panel" id="sec-lamps"><summary>Buitenlampen</summary>
+ <label class="tog"><input id="laOn" type="checkbox"> Lampen meesturen
+  <span class="help">Aan: de laptop neemt deze lampen in Home Assistant over. Ze krijgen een stand voor rust en een voor bezoek, en doen mee met spookgroen, bliksem, donder, uitblazen en opflakkeren, ook in clips. Uit: Home Assistant doet weer wat het normaal doet.</span></label>
+<div class="sub" data-for="laOn">
+ <div id="laList"></div>
+ <p class="help" id="laState"></p>
+ <div class="row"><button class="sm" onclick="saveLamps(this)">Opslaan</button>
+  <button class="sm neutral" onclick="testLamps('spookgroen')">Spookgroen</button>
+  <button class="sm neutral" onclick="testLamps('bliksem')">Bliksem</button>
+  <button class="sm neutral" onclick="testLamps('donder')">Donder</button></div>
+ <span class="help">Helderheid 0 = lamp uit. Home Assistant reageert iets trager dan de schedel, dus flitsen lopen net achter de kaarsen aan.</span>
 </div>
 </details>
 <h2 class="cat wide">&#128064; Beweging</h2>
@@ -722,7 +749,9 @@ async function loadSettings(){
   $('lVColor').value='#'+led2.vcolor.toLowerCase();$('lVB').value=led2.vbright;$('lVBv').textContent=led2.vbright+'%';$('lVMode').value=led2.vmode;
   $('lFx').checked=led2.fx;
  $('lBCount').value=led2.bcount;$('lBColor').value='#'+led2.bcolor.toLowerCase();$('lBB').value=led2.bbright;$('lBBv').textContent=led2.bbright+'%';
- $('lBMode').value=led2.bmode;$('lCColor').value='#'+led2.ccolor.toLowerCase();$('lCSecs').value=led2.csecs;setSwitch('lOn',led2.on)}
+ $('lBMode').value=led2.bmode;$('lCColor').value='#'+led2.ccolor.toLowerCase();$('lCSecs').value=led2.csecs;
+ $('lPCount').value=led2.pcount;$('lPColor').value='#'+led2.pcolor.toLowerCase();$('lPB').value=led2.pbright;$('lPBv').textContent=led2.pbright+'%';$('lPMode').value=led2.pmode;
+ $('lPVColor').value='#'+led2.pvcolor.toLowerCase();$('lPVB').value=led2.pvbright;$('lPVBv').textContent=led2.pvbright+'%';$('lPVMode').value=led2.pvmode;$('lPFx').checked=led2.pfx;setSwitch('lOn',led2.on)}
  const visit=await getJ('visit');if(visit){$('vHold').value=visit.hold;visitPoll()}
  const smk=await getJ('smoke');if(smk){setSwitch('sOn',smk.on);$('sHost').value=smk.host;$('sCool').value=smk.cooldown;$('sSmall').value=smk.small/1000;$('sBig').value=smk.big/1000;$('sLead').value=smk.lead/1000;smokePoll()}
  if(amps){setSwitch('aOn',amps.on);$('aSleep').checked=amps.sleep;$('aBass').value=amps.bass;$('aEchoOn').checked=amps.echoon;$('aEcho').value=amps.echo;$('aEchoMs').value=amps.echoms;syncEcho()}}
@@ -737,7 +766,9 @@ async function saveLed2(btn){await api('led2?count='+$('lCount').value+'&color='
  '&bright='+$('lB').value+'&mode='+$('lMode').value+
  '&vcolor='+$('lVColor').value.slice(1)+'&vbright='+$('lVB').value+'&vmode='+$('lVMode').value+
  '&bcount='+$('lBCount').value+'&bcolor='+$('lBColor').value.slice(1)+'&bbright='+$('lBB').value+'&bmode='+$('lBMode').value+
- '&ccolor='+$('lCColor').value.slice(1)+'&csecs='+$('lCSecs').value);flash(btn)}
+ '&ccolor='+$('lCColor').value.slice(1)+'&csecs='+$('lCSecs').value+
+ '&pcount='+$('lPCount').value+'&pcolor='+$('lPColor').value.slice(1)+'&pbright='+$('lPB').value+'&pmode='+$('lPMode').value+
+ '&pvcolor='+$('lPVColor').value.slice(1)+'&pvbright='+$('lPVB').value+'&pvmode='+$('lPVMode').value+'&pfx='+($('lPFx').checked?1:0));flash(btn)}
 async function saveVisit(btn){await api('visit?hold='+$('vHold').value);flash(btn)}
 async function testPerson(){await api('pir?test=1');visitPoll();setTimeout(pirPoll,2500)}
 async function visitPoll(){if($('viewSettings').hidden)return;const j=await getJ('visit');if(!j)return;
@@ -747,6 +778,33 @@ async function saveSmoke(btn){await api('smoke?on='+($('sOn').checked?1:0)+'&hos
 async function smokePoll(){if($('viewSettings').hidden)return;const j=await getJ('smoke');if(!j)return;
  $('sState').textContent=j.ago<0?'Nog geen rook sinds het opstarten.':'Laatste keer '+j.ago+' s geleden: '+j.result+'.'}
 setInterval(smokePoll,5000);
+// ---- outdoor lamps (Home Assistant, via this laptop app) ----
+let lampCfg=null;
+function lampCard(l,i){const d=document.createElement('div');d.className='lamp';d.dataset.i=i;
+ const look=(k,t)=>`<div class="row"><span style="min-width:5.5em">${t}</span>
+  <input type="color" data-k="${k}.color" value="${l[k].color}" aria-label="Kleur ${t.toLowerCase()} ${l.name}">
+  <input type="range" min="0" max="100" data-k="${k}.bright" value="${l[k].bright}" aria-label="Helderheid ${t.toLowerCase()} ${l.name}" style="flex:1">
+  <span class="pct">${l[k].bright}%</span></div>`;
+ d.innerHTML=`<label><input type="checkbox" data-k="on" ${l.on?'checked':''}> <b>${l.name}</b>
+  <span class="help">${l.entity}</span></label>${look('rest','Rustig')}${look('visit','Bij bezoek')}
+  <label><input type="checkbox" data-k="fx" ${l.fx?'checked':''}> Meedoen met effecten</label>`;
+ d.querySelectorAll('input[type=range]').forEach(r=>r.oninput=()=>r.nextElementSibling.textContent=r.value+'%');
+ return d}
+async function loadLamps(){try{lampCfg=await(await fetch('/api/lamps')).json()}catch(e){return}
+ const box=$('laList');box.textContent='';lampCfg.lamps.forEach((l,i)=>box.append(lampCard(l,i)));
+ setSwitch('laOn',lampCfg.on);lampPoll()}
+function lampsFromForm(){const c=JSON.parse(JSON.stringify(lampCfg));c.on=$('laOn').checked;delete c.status;
+ document.querySelectorAll('#laList .lamp').forEach(d=>{const l=c.lamps[d.dataset.i];
+  d.querySelectorAll('[data-k]').forEach(e=>{const [a,b]=e.dataset.k.split('.');
+   const v=e.type=='checkbox'?e.checked:e.type=='range'?+e.value:e.value;if(b)l[a][b]=v;else l[a]=v})});return c}
+async function saveLamps(btn){const r=await fetch('/api/lamps',{method:'POST',headers:{'Content-Type':'application/json'},
+ body:JSON.stringify(lampsFromForm())});lampCfg=await r.json();if(btn)flash(btn);lampPoll()}
+async function testLamps(fx){await fetch('/api/lamps/test?fx='+fx);setTimeout(lampPoll,1500)}
+async function lampPoll(){if($('viewSettings').hidden)return;try{const j=await(await fetch('/api/lamps')).json();
+ $('laState').textContent=j.status.error?'Probleem: '+j.status.error:
+  (j.on?(j.status.present?'Bezoek: de lampen staan in hun bezoekstand.':'Rustig: de lampen staan in hun rustige stand.'):'Uit: Home Assistant bestuurt de lampen.')}catch(e){}}
+setInterval(lampPoll,3000);
+loadLamps();
 async function pirPoll(){if($('viewSettings').hidden)return;const j=await getJ('pir');if(!j)return;
  $('pState').textContent=(j.motion?'Ziet nu beweging. ':'Ziet nu niemand. ')+
   (j.ago<0?'Nog geen begroeting sinds het opstarten.':j.count+'× begroet, laatste keer '+j.ago+' s geleden.')}
@@ -762,9 +820,12 @@ onSwitch('eOn',v=>api('eyes?on='+v));onSwitch('kOn',v=>api('candles?on='+v));
 onSwitch('lOn',v=>api('led2?on='+v));onSwitch('tOn',()=>api(turnQ()));
 onSwitch('pOn',v=>api('pir?on='+v+'&cooldown='+$('pCool').value));
 onSwitch('sOn',()=>saveSmoke());
+onSwitch('laOn',()=>saveLamps());
 $('lB').oninput=()=>$('lBv').textContent=$('lB').value+'%';
 $('lVB').oninput=()=>$('lVBv').textContent=$('lVB').value+'%';
 $('lBB').oninput=()=>$('lBBv').textContent=$('lBB').value+'%';
+$('lPB').oninput=()=>$('lPBv').textContent=$('lPB').value+'%';
+$('lPVB').oninput=()=>$('lPVBv').textContent=$('lPVB').value+'%';
 $('lFx').onchange=()=>api('led2?fx='+($('lFx').checked?1:0));
 $('aSleep').onchange=()=>api('amps?sleep='+($('aSleep').checked?1:0));
 $('aBass').onchange=()=>api('amps?bass='+$('aBass').value);

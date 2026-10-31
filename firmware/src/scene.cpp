@@ -20,6 +20,8 @@ struct Strike {
 static const int MAX_STRIKES = 8;
 static Strike strikes[MAX_STRIKES];
 static volatile uint32_t seed = 1;
+static char lastFx[16] = "";
+static volatile uint32_t fxCount = 0;
 
 void begin() {
   prefs.begin("scene", false);
@@ -98,8 +100,14 @@ int lag(int light, int maxMs) {
   return (h % 1000) * maxMs / 1000;
 }
 
+void note(const char *effect) {
+  strlcpy(lastFx, effect, sizeof lastFx);
+  fxCount++;
+}
+
 String json() {
-  return String("{\"present\":") + (present() ? "true" : "false") + ",\"hold\":" + holdS + "}";
+  return String("{\"present\":") + (present() ? "true" : "false") + ",\"hold\":" + holdS +
+         ",\"fx\":\"" + lastFx + "\",\"fxn\":" + fxCount + "}";
 }
 
 }  // namespace scene

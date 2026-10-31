@@ -218,7 +218,21 @@
   <input id="lVColor" type="color" value="#ffc080" aria-label="Kleur van LED 2 bij bezoek"></div>
  <label>Helderheid <span id="lVBv"></span>
   <input id="lVB" type="range" min="0" max="100" aria-label="Helderheid van LED 2 bij bezoek"></label>
- <p class="help" style="margin:0"><b>Snoepschaal</b>: ledjes die na de andere in dezelfde ketting komen</p>
+ <p class="help" style="margin:0"><b>Pompoen</b>: ledjes die na de bovenste in dezelfde ketting komen</p>
+ <label>Ledjes in de pompoen <input id="lPCount" type="number" min="0" max="30">
+  <span class="help">0 = geen pompoen.</span></label>
+ <div class="row"><span style="min-width:5.5em">Rustig</span><select id="lPMode" aria-label="Werking van de pompoen als het rustig is">
+   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="7">Kaarsvlam</option><option value="6">Ademen</option><option value="4">Draaien</option><option value="5">Stemmeter</option></select>
+  <input id="lPColor" type="color" value="#ff5000" aria-label="Kleur van de pompoen als het rustig is"></div>
+ <label>Helderheid <span id="lPBv"></span>
+  <input id="lPB" type="range" min="0" max="100" aria-label="Helderheid van de pompoen als het rustig is"></label>
+ <div class="row"><span style="min-width:5.5em">Bij bezoek</span><select id="lPVMode" aria-label="Werking van de pompoen bij bezoek">
+   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="7">Kaarsvlam</option><option value="6">Ademen</option><option value="4">Draaien</option><option value="5">Stemmeter</option></select>
+  <input id="lPVColor" type="color" value="#ff7000" aria-label="Kleur van de pompoen bij bezoek"></div>
+ <label>Helderheid <span id="lPVBv"></span>
+  <input id="lPVB" type="range" min="0" max="100" aria-label="Helderheid van de pompoen bij bezoek"></label>
+ <label><input id="lPFx" type="checkbox"> Pompoen doet mee met effecten</label>
+ <p class="help" style="margin:0"><b>Snoepschaal</b>: ledjes die daarna in dezelfde ketting komen</p>
  <label>Ledjes boven de snoepschaal <input id="lBCount" type="number" min="0" max="30">
   <span class="help">0 = geen snoepschaal.</span></label>
  <div class="row"><select id="lBMode" aria-label="Werking van de snoepschaal">
@@ -454,7 +468,9 @@ setInterval(pirPoll,2000);
 const led2Q=()=>'led2?count='+$('lCount').value+'&color='+$('lColor').value.slice(1)+'&bright='+$('lB').value+'&mode='+$('lMode').value+
  '&vcolor='+$('lVColor').value.slice(1)+'&vbright='+$('lVB').value+'&vmode='+$('lVMode').value+
  '&bcount='+$('lBCount').value+'&bcolor='+$('lBColor').value.slice(1)+'&bbright='+$('lBB').value+'&bmode='+$('lBMode').value+
- '&ccolor='+$('lCColor').value.slice(1)+'&csecs='+$('lCSecs').value;
+ '&ccolor='+$('lCColor').value.slice(1)+'&csecs='+$('lCSecs').value+
+ '&pcount='+$('lPCount').value+'&pcolor='+$('lPColor').value.slice(1)+'&pbright='+$('lPB').value+'&pmode='+$('lPMode').value+
+ '&pvcolor='+$('lPVColor').value.slice(1)+'&pvbright='+$('lPVB').value+'&pvmode='+$('lPVMode').value+'&pfx='+($('lPFx').checked?1:0);
 $('lFx').onchange=()=>api('led2?fx='+($('lFx').checked?1:0));
 async function saveVisit(btn){await api('visit?hold='+$('vHold').value);flash(btn)}
 async function testPerson(){await api('pir?test=1');visitPoll();setTimeout(pirPoll,2500)}
@@ -482,12 +498,16 @@ onSwitch('sOn',()=>saveSmoke());
 $('lB').oninput=()=>$('lBv').textContent=$('lB').value+'%';
 $('lVB').oninput=()=>$('lVBv').textContent=$('lVB').value+'%';
 $('lBB').oninput=()=>$('lBBv').textContent=$('lBB').value+'%';
+$('lPB').oninput=()=>$('lPBv').textContent=$('lPB').value+'%';
+$('lPVB').oninput=()=>$('lPVBv').textContent=$('lPVB').value+'%';
 api('led2').then(r=>r.json()).then(j=>{$('lCount').value=j.count;$('lColor').value='#'+j.color.toLowerCase();
  $('lB').value=j.bright;$('lBv').textContent=j.bright+'%';$('lMode').value=j.mode;
  $('lVColor').value='#'+j.vcolor.toLowerCase();$('lVB').value=j.vbright;$('lVBv').textContent=j.vbright+'%';$('lVMode').value=j.vmode;
  $('lFx').checked=j.fx;
  $('lBCount').value=j.bcount;$('lBColor').value='#'+j.bcolor.toLowerCase();$('lBB').value=j.bbright;$('lBBv').textContent=j.bbright+'%';
- $('lBMode').value=j.bmode;$('lCColor').value='#'+j.ccolor.toLowerCase();$('lCSecs').value=j.csecs;setSwitch('lOn',j.on)}).catch(()=>{});
+ $('lBMode').value=j.bmode;$('lCColor').value='#'+j.ccolor.toLowerCase();$('lCSecs').value=j.csecs;
+ $('lPCount').value=j.pcount;$('lPColor').value='#'+j.pcolor.toLowerCase();$('lPB').value=j.pbright;$('lPBv').textContent=j.pbright+'%';$('lPMode').value=j.pmode;
+ $('lPVColor').value='#'+j.pvcolor.toLowerCase();$('lPVB').value=j.pvbright;$('lPVBv').textContent=j.pvbright+'%';$('lPVMode').value=j.pvmode;$('lPFx').checked=j.pfx;setSwitch('lOn',j.on)}).catch(()=>{});
 $('aSleep').onchange=()=>api('amps?sleep='+($('aSleep').checked?1:0));
 $('aBass').onchange=()=>api('amps?bass='+$('aBass').value);
 function syncEcho(){const on=$('aEchoOn').checked;for(const id of ['aEcho','aEchoMs'])$(id).disabled=!on;

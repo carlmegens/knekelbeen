@@ -41,6 +41,7 @@ import ai  # noqa: E402  (needs the environment loaded first)
 import gemini  # noqa: E402
 import designed  # noqa: E402
 import headless  # noqa: E402
+import lamps  # noqa: E402
 import ha  # noqa: E402
 CLIPS = ROOT / "clips"
 RAW = CLIPS / "raw"
@@ -585,6 +586,22 @@ async def index(_: web.Request) -> web.FileResponse:
     return web.FileResponse(Path(__file__).parent / "index.html")
 
 
+async def lamps_api(req: web.Request) -> web.Response:
+    """GET: lamp settings and status. POST: save them (applied right away)."""
+    if req.method == "POST":
+        lamps.save(await req.json())
+    return web.json_response({**lamps.settings, "status": lamps.status})
+
+
+async def lamps_test(req: web.Request) -> web.Response:
+    asyncio.create_task(lamps.test(req.query.get("fx", "")))
+    return web.json_response({"ok": True})
+
+
+async def follow_lamps(_app) -> None:
+    _app["lamps"] = asyncio.create_task(lamps.run(SKULL_URL))
+
+
 def main() -> None:
     app = web.Application(client_max_size=50 * 1024 * 1024)
     app.add_routes([
@@ -598,6 +615,9 @@ def main() -> None:
         web.get("/api/ai/headless/start", headless_start),
         web.get("/api/ai/headless/stop", headless_stop),
         web.get("/api/ai/headless/config", headless_config),
+        web.get("/api/lamps", lamps_api),
+        web.post("/api/lamps", lamps_api),
+        web.get("/api/lamps/test", lamps_test),
         web.get("/api/skullrec", skullrec_status),
         web.get("/api/skullrec/start", skullrec_start),
         web.get("/api/skullrec/stop", skullrec_stop),
@@ -616,6 +636,7 @@ def main() -> None:
     # Short shutdown: open AI/live sockets would otherwise delay a restart 60 s.
     app.on_startup.append(announce)
     app.on_startup.append(watch_pir)
+    app.on_startup.append(follow_lamps)
     # Listen on the LAN too, so the skull's page (and your phone) can start
     # the AI. The laptop page itself must still be opened via localhost for
     # microphone access.

@@ -5,6 +5,7 @@ __pycache__/
 firmware/.pio/
 firmware/include/secrets.h
 brain/ai_settings.json
+brain/lamps.json
 voices/*.onnx
 clips/opname*.wav
 radar/.pio/

@@ -22,6 +22,10 @@ float lightning(uint32_t now, int lagMs);
 // Per light and strike a fixed pseudo-random lag 0..maxMs.
 int lag(int light, int maxMs);
 
+// The last light effect (kaarsen_op, spookgroen, donder...), with a counter,
+// so the laptop can let the outdoor lamps join in.
+void note(const char *effect);
+
 String json();
 
 }  // namespace scene
