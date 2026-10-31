@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "eyes.h"
+#include "scene.h"
 
 namespace pir {
 
@@ -23,6 +24,7 @@ static void pirTask(void *) {
     // HC-SR501-style sensors fire at random while they warm up.
     bool fire = now && !was && enabled && t > PIR_WARMUP_MS &&
                 (!triggered || t - lastTrigger > (uint32_t)cooldownS * 1000);
+    if (now && enabled && t > PIR_WARMUP_MS) scene::visit();  // still there
     if (fire || testFlag) {
       testFlag = false;
       triggered = true;
@@ -30,6 +32,7 @@ static void pirTask(void *) {
       count++;
       Serial.println("PIR: motion");
       eyes::flash();
+      scene::visit();
     }
     was = now;
     vTaskDelay(pdMS_TO_TICKS(50));

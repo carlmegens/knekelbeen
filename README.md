@@ -122,7 +122,16 @@ tools/gemini_clip.py welkom "Welkom, kleintjes..." --style "fluisterend" --uploa
 tools/gemini_clip.py --batch clips/lines.txt --upload   # alles uit lines.txt
 tools/make_fx.py --upload                               # de geluidseffecten
 tools/upload.sh clips/iets.wav                          # een los bestand
+tools/make_cues.py --upload                             # lichteffecten in de clips
 ```
+
+Clips brengen hun eigen lichteffecten mee: `clips/cues.txt` zegt per clip
+wanneer de kaarsen opflakkeren, uitgaan of spookgroen worden, wanneer de ogen
+flitsen en wanneer de bliksem inslaat (`bliksem`: één inslag, `donder`: een
+rollend onweer over kaarsen, ogen en LED 2). `make_cues.py` vindt die zelf (op woorden als "boe" en "geest", en op
+de klappen in de geluidseffecten); pas het bestand gerust met de hand aan.
+Upload een nieuwe of aangepaste clip daarna met `make_cues.py --upload <naam>`,
+anders speelt hij zonder effecten.
 
 Clips worden opgeslagen als 22,05 kHz mono en op loudness genormaliseerd.
 

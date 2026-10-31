@@ -2,8 +2,11 @@
 
 #include <Preferences.h>
 
+#include <utility>
+
 #include "config.h"
 #include "jaw.h"
+#include "scene.h"
 
 namespace candles {
 
@@ -11,6 +14,7 @@ static const int MAX_CANDLES = 20;
 static Preferences prefs;
 static volatile int count = 9;
 static volatile int bright = 80;
+static volatile int visitBright = 100;  // while someone is at the door
 static volatile int speed = 100;  // flicker speed, % of normal
 static volatile bool voiceReact = true;  // flare with the skull's voice
 static volatile Mode mode = FLICKER;
@@ -18,6 +22,9 @@ static volatile bool enabled = true;
 static char order[4] = "RGB";  // byte order the string expects
 static volatile Effect effect = NONE;
 static volatile uint32_t effectStart = 0;
+// Each effect goes candle by candle: a fresh random order per trigger, plus
+// a little random slack, so it never looks like one switch.
+static uint16_t stagger[MAX_CANDLES];  // ms after the effect starts
 
 // A flame = slow sway (the flame leaning and stretching) + fast nervous
 // jitter + occasional gutters (a draught), and its colour follows its
@@ -32,10 +39,15 @@ static Flame flames[MAX_CANDLES];
 static uint8_t frame[MAX_CANDLES][3];  // r, g, b
 
 // WS2801: 24 bits per pixel, MSB first, sampled on the rising clock edge;
-// holding the clock low for >500 us latches the data.
+// holding the clock low for >500 us latches the data. So the whole frame
+// goes out in one go: if the audio task (higher priority, same core) cut in
+// halfway, the string would latch half a frame and flash.
+static portMUX_TYPE showLock = portMUX_INITIALIZER_UNLOCKED;
+
 static void show(int n) {
   char o[4];
   memcpy(o, order, 4);  // snapshot; a torn update only affects one frame
+  portENTER_CRITICAL(&showLock);  // ~4 us per candle
   for (int i = 0; i < n; i++) {
     for (int c = 0; c < 3; c++) {
       uint8_t v = o[c] == 'R' ? frame[i][0] : o[c] == 'G' ? frame[i][1] : frame[i][2];
@@ -46,6 +58,7 @@ static void show(int n) {
       }
     }
   }
+  portEXIT_CRITICAL(&showLock);
 }
 
 static float rnd() { return random(10000) / 10000.0f; }  // 0..1
@@ -66,7 +79,8 @@ static void candleTask(void *) {
     uint32_t now = millis();
     int n = count;
     float voice = voiceReact ? jaw::target() : 0.0f;  // 0..1, follows the speech
-    float master = bright / 100.0f;
+    // Brighter while someone is at the door, eased in and out.
+    float master = (bright + (visitBright - bright) * scene::presence()) / 100.0f;
     float sp = speed / 100.0f;
     uint32_t t = now - effectStart;
     Effect fx = effect;
@@ -107,23 +121,37 @@ static void candleTask(void *) {
 
       switch (fx) {
         case BLOW_OUT: {
-          // Out one by one over ~1.5 s, dark for 2.5 s, relight one by one.
-          uint32_t outAt = i * 1500 / max(n, 1);
-          uint32_t backAt = 4000 + i * 1200 / max(n, 1);
-          if (t > outAt && t < backAt) k = 0;
+          // Out one by one over ~1.5 s with a last gutter, dark for a while,
+          // relight one by one in the same order.
+          uint32_t outAt = stagger[i] * 3 / 2;
+          uint32_t backAt = 4000 + stagger[i] * 6 / 5;
+          if (t > outAt && t < outAt + 150) k *= 1.0f - (t - outAt) / 150.0f;
+          else if (t >= outAt + 150 && t < backAt) k = 0;
           else if (t >= backAt && t < backAt + 300) k *= (t - backAt) / 300.0f;
           if (t > 5600) effect = NONE;
           break;
         }
-        case FLARE:
-          k = master * (1.0f - 0.3f * (t / 1200.0f)) * (0.9f + 0.1f * f.sway);
-          r = 255, g = 150, b = 40;
-          if (t > 1200) effect = NONE;
+        case FLARE: {
+          // A whoosh through the candles: each flares up in turn and settles.
+          int32_t ft = (int32_t)t - stagger[i] / 4;  // spread over ~0.25 s
+          if (ft >= 0 && ft < 1200) {
+            float up = min(ft / 80.0f, 1.0f);
+            float fk = master * (1.0f - 0.3f * (ft / 1200.0f)) * (0.9f + 0.1f * f.sway);
+            k += (fk - k) * up;
+            r = 255, g += (150 - g) * up, b += (40 - b) * up;
+          }
+          if (t > 1500) effect = NONE;
           break;
-        case GHOST:
-          r = 40, g = 255, b = 90;  // eerie green
-          if (t > 6000) effect = NONE;
+        }
+        case GHOST: {
+          // Green creeps from candle to candle, and leaves the same way.
+          float in = constrain(((int32_t)t - (int32_t)stagger[i] / 2) / 250.0f, 0.0f, 1.0f);
+          float out = constrain(((int32_t)t - 5000 - (int32_t)stagger[i] / 2) / 250.0f, 0.0f, 1.0f);
+          float gk = in * (1 - out);
+          r += (40 - r) * gk, g += (255 - g) * gk, b += (90 - b) * gk;  // eerie green
+          if (t > 5800) effect = NONE;
           break;
+        }
         case TEST: {
           // One candle at a time, white, to check count and order.
           int lit = t / 500;
@@ -134,6 +162,13 @@ static void candleTask(void *) {
         }
         default:
           break;
+      }
+      // Lightning on top of everything, rolling across the candles.
+      float l = enabled && mode != OFF ? scene::lightning(now, scene::lag(i, 150)) : 0;
+      if (l > 0.01f) {
+        float lk = max(k, l);
+        r += (200 - r) * l, g += (215 - g) * l, b += (255 - b) * l;
+        k = lk;
       }
       setPixel(i, r, g, b, k);
     }
@@ -149,6 +184,7 @@ void begin() {
   prefs.begin("candles", false);
   count = constrain(prefs.getInt("count", 9), 1, MAX_CANDLES);
   bright = prefs.getInt("bright", 80);
+  visitBright = prefs.getInt("visit", 100);
   speed = constrain(prefs.getInt("speed", 100), 20, 300);
   voiceReact = prefs.getBool("voice", true);
   mode = (Mode)prefs.getInt("mode", FLICKER);
@@ -180,6 +216,11 @@ void setSpeed(int percent) {
   prefs.putInt("speed", speed);
 }
 
+void setVisitBright(int percent) {
+  visitBright = constrain(percent, 0, 100);
+  prefs.putInt("visit", visitBright);
+}
+
 void setVoiceReact(bool on) {
   voiceReact = on;
   prefs.putBool("voice", on);
@@ -191,13 +232,23 @@ void setOn(bool on) {
 }
 
 void trigger(Effect e) {
+  // A shuffled order 0..1000 ms, each with up to 100 ms of slack.
+  int n = count, idx[MAX_CANDLES];
+  for (int i = 0; i < n; i++) idx[i] = i;
+  for (int i = n - 1; i > 0; i--) std::swap(idx[i], idx[random(i + 1)]);
+  for (int r = 0; r < n; r++) stagger[idx[r]] = r * 900 / max(n - 1, 1) + random(100);
   effectStart = millis();
   effect = e;
 }
 
+Effect current(uint32_t &elapsedMs) {
+  elapsedMs = millis() - effectStart;
+  return effect;
+}
+
 String json() {
   return String("{\"on\":") + (enabled ? "true" : "false") + ",\"count\":" + count + ",\"order\":\"" + order + "\",\"bright\":" +
-         bright + ",\"mode\":" + (int)mode + ",\"speed\":" + speed +
+         bright + ",\"mode\":" + (int)mode + ",\"speed\":" + speed + ",\"visit\":" + visitBright +
          ",\"voice\":" + (voiceReact ? "true" : "false") + "}";
 }
 

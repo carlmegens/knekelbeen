@@ -12,6 +12,8 @@
 #include "jaw.h"
 #include "led2.h"
 #include "pir.h"
+#include "scene.h"
+#include "smoke.h"
 #include "storage.h"
 #include "turn.h"
 
@@ -24,6 +26,24 @@
 
 static WebServer server(80);
 static String brainUrl;  // laptop app, announced by itself every 30 s
+
+static void ghost() {
+  candles::trigger(candles::GHOST);
+  eyes::tint(0x28FF5A, 6000);  // the eyes turn the same eerie green
+}
+
+// Light cues inside a clip; the same names as the AI's speciaal_effect.
+static void lightCue(const char *name) {
+  if (!strcmp(name, "kaarsen_op")) candles::trigger(candles::FLARE);
+  else if (!strcmp(name, "kaarsen_uit")) candles::trigger(candles::BLOW_OUT);
+  else if (!strcmp(name, "spookgroen")) ghost();
+  else if (!strcmp(name, "ogen_flits")) eyes::flash();
+  else if (!strcmp(name, "bliksem")) scene::strike();
+  else if (!strcmp(name, "donder")) scene::thunder();
+  else if (!strcmp(name, "rook")) smoke::puff(false);
+  else if (!strcmp(name, "veel_rook")) smoke::puff(true);
+  else if (!strcmp(name, "snoep")) led2::candy();
+}
 
 // web/index.html, embedded at build time (board_build.embed_txtfiles).
 extern const char PAGE[] asm("_binary_web_index_html_start");
@@ -226,14 +246,14 @@ static void setupServer() {
     if (server.hasArg("on")) candles::setOn(server.arg("on") == "1");
     if (server.hasArg("speed")) candles::setSpeed(server.arg("speed").toInt());
     if (server.hasArg("voice")) candles::setVoiceReact(server.arg("voice") == "1");
+    if (server.hasArg("visit")) candles::setVisitBright(server.arg("visit").toInt());
     String fx = server.arg("effect");
     if (fx == "out") candles::trigger(candles::BLOW_OUT);
     else if (fx == "flare") candles::trigger(candles::FLARE);
-    else if (fx == "ghost") {
-      candles::trigger(candles::GHOST);
-      eyes::tint(0x28FF5A, 6000);  // the eyes turn the same eerie green
-    }
+    else if (fx == "ghost") ghost();
     else if (fx == "test") candles::trigger(candles::TEST);
+    else if (fx == "strike") scene::strike();
+    else if (fx == "thunder") scene::thunder();
     server.send(200, "application/json", candles::json());
   });
 
@@ -263,12 +283,46 @@ static void setupServer() {
     server.send(200, "application/json", pir::json());
   });
 
+  server.on("/smoke", [] {
+    if (server.hasArg("host"))
+      smoke::setConfig(server.arg("on") == "1", server.arg("host"), server.arg("cooldown").toInt(),
+                       server.arg("small").toFloat() * 1000, server.arg("big").toFloat() * 1000);
+    // puff=small|big respects the cooldown; test=small|big doesn't.
+    if (server.hasArg("puff")) smoke::puff(server.arg("puff") == "big");
+    if (server.hasArg("test")) smoke::puff(server.arg("test") == "big", true);
+    server.send(200, "application/json", smoke::json());
+  });
+
+  // A clip's lights without its sound, e.g. with the doorbell's own organ.
+  server.on("/lights", [] {
+    bool ok = audio::lightsOnly("/clips/" + server.arg("f"));
+    if (ok) scene::visit();  // whoever rings is at the door
+    server.send(ok ? 200 : 404, "text/plain", ok ? "ok" : "geen clip met lichteffecten");
+  });
+
+  // Someone at the door (the laptop sends this for Home Assistant's sensors);
+  // hold= sets how long a visit lasts after the last sign.
+  server.on("/visit", [] {
+    if (server.hasArg("hold")) scene::setHold(server.arg("hold").toInt());
+    if (server.hasArg("now")) scene::visit();
+    server.send(200, "application/json", scene::json());
+  });
+
   server.on("/led2", [] {
     if (server.hasArg("on")) led2::setOn(server.arg("on") == "1");
     if (server.hasArg("color"))
       led2::set(server.arg("count").toInt(),
                 strtoul(server.arg("color").c_str(), nullptr, 16),
                 server.arg("bright").toInt(), (led2::Mode)server.arg("mode").toInt());
+    if (server.hasArg("vcolor"))
+      led2::setVisit(strtoul(server.arg("vcolor").c_str(), nullptr, 16),
+                     server.arg("vbright").toInt(), (led2::Mode)server.arg("vmode").toInt());
+    if (server.hasArg("fx")) led2::setEffects(server.arg("fx") == "1");
+    if (server.hasArg("bcount"))
+      led2::setBowl(server.arg("bcount").toInt(), strtoul(server.arg("bcolor").c_str(), nullptr, 16),
+                    server.arg("bbright").toInt(), (led2::Mode)server.arg("bmode").toInt(),
+                    strtoul(server.arg("ccolor").c_str(), nullptr, 16), server.arg("csecs").toInt() * 1000);
+    if (server.hasArg("candy")) led2::candy();
     server.send(200, "application/json", led2::json());
   });
 
@@ -340,17 +394,20 @@ void setup() {
   Serial.println("\n=== Talking Skull ===");
   jaw::begin();
   turn::begin();
+  scene::begin();
   eyes::begin();
   candles::begin();
   mic::begin();
   storage::begin();
   audio::begin();
+  audio::onCue(lightCue);
   setupWifi();
   audio::beginNetwork();
   mic::beginNetwork();
   setupServer();
   setupOta();
   pir::begin();
+  smoke::begin();
 }
 
 // The ESP32 never roams on its own. If the signal stays weak (e.g. it booted
@@ -416,5 +473,7 @@ void loop() {
   server.handleClient();
   ArduinoOTA.handle();
   handleSerial();
+  audio::tickCues();
+  smoke::service();
   delay(1);
 }

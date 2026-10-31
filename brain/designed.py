@@ -49,8 +49,12 @@ je niets verstaanbaars (alleen ruis of gelach), laat "antwoord" dan leeg.
 - Kies bij spannende of grappige antwoorden een effect voor de kaarsen of je \
 ogen: kaarsen_uit als het donker wordt of een geest langskomt, kaarsen_op bij \
 een schrikmoment of "boe!", spookgroen bij iets spookachtigs of magisch, \
-ogen_flits als je iemand streng of geheimzinnig aankijkt. Anders "geen". \
-Niet twee keer achter elkaar hetzelfde."""
+ogen_flits als je iemand streng of geheimzinnig aankijkt, bliksem bij een \
+plotselinge onthulling, donder bij iets dreigends, snoep als je zegt dat ze \
+een snoepje mogen pakken (dan licht de snoepschaal op). Anders "geen". \
+Niet twee keer achter elkaar hetzelfde.
+- Zeggen de kinderen "trick or treat" of "snoep of je leven", zeg dan dat ze \
+één snoepje uit de schaal mogen pakken en kies het effect snoep."""
 
 SCHEMA = {
     "type": "object",

@@ -9,6 +9,8 @@ person count going up, counts as a new arrival.
   HA_TOKEN=<long-lived access token>      (HA profile -> Security)
   HA_VISITOR_ENTITIES=binary_sensor.knekelbeen_radar_aanwezig,binary_sensor.halloween_person_occupancy
   HA_COOLDOWN_S=60                         (optional)
+  HA_DOORBELL=binary_sensor.doorbell_lite_deurbel   (optional)
+  HA_DOORBELL_CLIP=fx_orgel.wav            (the bell's own tune, with light cues)
 
 Without HA_VISITOR_ENTITIES it lists candidate sensors once, so you can pick.
 """
@@ -22,6 +24,9 @@ import aiohttp
 URL = os.environ.get("HA_URL", "").rstrip("/")
 TOKEN = os.environ.get("HA_TOKEN", "")
 ENTITIES = {e.strip() for e in os.environ.get("HA_VISITOR_ENTITIES", "").split(",") if e.strip()}
+DOORBELL = os.environ.get("HA_DOORBELL", "").strip()
+# The bell plays this organ tune itself; the skull only runs its light cues.
+DOORBELL_CLIP = os.environ.get("HA_DOORBELL_CLIP", "fx_orgel.wav")
 CANDIDATE_CLASSES = {"motion", "occupancy", "presence"}
 # Sensors flick on and off while a group stands at the door; after a
 # greeting, ignore them this long (like the PIR cooldown on the skull).
@@ -45,7 +50,7 @@ def arrived(old: str | None, new: str | None) -> bool:
         return False
 
 
-async def _session(ws, on_visitor, status) -> None:
+async def _session(ws, on_visitor, on_seen, on_ring, status) -> None:
     msg = await ws.receive_json()  # auth_required
     await ws.send_json({"type": "auth", "access_token": TOKEN})
     msg = await ws.receive_json()
@@ -66,15 +71,21 @@ async def _session(ws, on_visitor, status) -> None:
     await ws.send_json({"id": 1, "type": "subscribe_events", "event_type": "state_changed"})
     status["state"] = "verbonden"
     last = -COOLDOWN_S
-    print(f"HA: luistert naar {', '.join(sorted(ENTITIES))}", flush=True)
+    print(f"HA: luistert naar {', '.join(sorted(ENTITIES | {DOORBELL} - {''}))}", flush=True)
     async for raw in ws:
         if raw.type != aiohttp.WSMsgType.TEXT:
             break
         data = raw.json().get("event", {}).get("data", {})
-        if data.get("entity_id") not in ENTITIES:
-            continue
         old = (data.get("old_state") or {}).get("state")
         new = (data.get("new_state") or {}).get("state")
+        if DOORBELL and data.get("entity_id") == DOORBELL and arrived(old, new):
+            print("HA: er wordt aangebeld", flush=True)
+            on_ring()
+            continue
+        if data.get("entity_id") not in ENTITIES:
+            continue
+        if new == "on" or arrived(old, new):
+            on_seen()  # someone's there: keeps the skull's lights in visit mode
         if arrived(old, new):
             now = time.monotonic()
             fresh = now - last >= COOLDOWN_S
@@ -85,15 +96,17 @@ async def _session(ws, on_visitor, status) -> None:
                 on_visitor()
 
 
-async def listen(on_visitor, status: dict) -> None:
-    """Keeps a connection to HA open; reconnects after a drop."""
+async def listen(on_visitor, on_seen, on_ring, status: dict) -> None:
+    """Keeps a connection to HA open; reconnects after a drop. on_visitor:
+    a new group (after the cooldown); on_seen: any sign of someone; on_ring:
+    the doorbell."""
     delay = 2
     while True:
         try:
             async with aiohttp.ClientSession() as s:
                 async with s.ws_connect(f"{URL}/api/websocket", heartbeat=30) as ws:
                     delay = 2
-                    await _session(ws, on_visitor, status)
+                    await _session(ws, on_visitor, on_seen, on_ring, status)
         except PermissionError as e:
             status["state"] = str(e)
             print(f"HA: {e}; controleer HA_TOKEN", flush=True)

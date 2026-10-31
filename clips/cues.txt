@@ -1,0 +1,43 @@
+# name | seconds effect, ...  (kaarsen_op, kaarsen_uit, spookgroen, ogen_flits, bliksem, donder, rook, veel_rook, snoep)
+# Made by tools/make_cues.py; edit freely, then: tools/make_cues.py --upload
+Carl           | 
+Vic            | 
+adres          | 
+botlied        | 13.06 ogen_flits, 13.7 ogen_flits, 23.4 kaarsen_uit
+buik           | 12.48 kaarsen_uit
+dag            | 2.5 ogen_flits, 5.36 kaarsen_op
+dapper         | 6.64 kaarsen_op
+durf           | 4.14 ogen_flits, 7.4 kaarsen_op
+fx_donder      | 0.32 bliksem, 1.65 bliksem, 2.19 bliksem, 2.94 bliksem, 3.71 bliksem
+fx_hartslag    | 0.21 ogen_flits, 1.54 ogen_flits, 2.24 ogen_flits, 3.15 ogen_flits, 3.99 ogen_flits, 4.78 ogen_flits, 5.51 ogen_flits, 6.19 ogen_flits, 6.83 ogen_flits, 7.42 ogen_flits, 7.97 ogen_flits, 8.52 ogen_flits, 9.07 ogen_flits
+fx_klokkenspel | 0.1 spookgroen
+fx_klokslag    | 0.08 ogen_flits, 0.88 ogen_flits, 2.19 ogen_flits
+fx_kraak       | 0.1 spookgroen
+fx_middernacht | 0 ogen_flits, 2.21 ogen_flits, 4.42 ogen_flits, 11.03 ogen_flits, 12.14 ogen_flits, 15.44 ogen_flits, 16.31 ogen_flits, 17.65 ogen_flits, 19.85 ogen_flits, 22.05 ogen_flits, 24.26 ogen_flits
+fx_orgel       | 0.3 kaarsen_op, 0.3 ogen_flits, 2.6 ogen_flits, 4.3 donder, 4.3 spookgroen, 4.3 rook
+fx_uil         | 0.04 ogen_flits, 0.99 ogen_flits, 1.69 ogen_flits
+fx_wind        | 0.1 kaarsen_uit
+gaap           | 12.52 spookgroen
+groepje        | 3.02 kaarsen_op
+honderd        | 2.04 spookgroen, 8.56 ogen_flits
+hoofdpijn      | 9.24 ogen_flits
+kietel         | 5.22 kaarsen_op
+klok           | 1.2 ogen_flits, 4.2 ogen_flits, 9.18 kaarsen_uit
+kostuum        | 4.54 kaarsen_op, 7.58 spookgroen
+koud           | 0 kaarsen_uit
+lach           | 0 kaarsen_op, 0.1 ogen_flits, 2 kaarsen_op, 4 spookgroen
+liedje         | 
+niemand        | 7.74 kaarsen_uit
+nogeen         | 4.08 ogen_flits, 11.18 spookgroen
+ouders         | 5.08 ogen_flits, 7.7 spookgroen
+psst           | 1.92 ogen_flits, 3.78 ogen_flits, 8.1 spookgroen
+rammel         | 1.94 ogen_flits, 4.04 ogen_flits, 4.98 ogen_flits, 5.78 ogen_flits, 8.24 spookgroen
+schrik         | 0 kaarsen_op, 0 ogen_flits
+snoep          | 5.3 ogen_flits
+spinnen        | 1.66 spookgroen, 4.4 ogen_flits, 7.84 ogen_flits
+tanden         | 1.26 ogen_flits, 8.36 kaarsen_op
+tikkendeklok   | 0.08 ogen_flits, 0.59 ogen_flits, 1.1 ogen_flits, 1.61 ogen_flits, 2.12 ogen_flits, 2.63 ogen_flits, 3.14 ogen_flits, 3.65 ogen_flits, 4.16 ogen_flits, 4.67 ogen_flits, 5.18 ogen_flits, 5.69 ogen_flits, 6.21 ogen_flits, 6.72 ogen_flits, 7.23 ogen_flits, 7.74 ogen_flits, 8.23 ogen_flits, 8.72 ogen_flits
+tot_ziens      | 6.02 spookgroen
+vic            | 
+volle_maan     | 1.64 spookgroen
+welkom         | 3.96 ogen_flits, 8.24 spookgroen

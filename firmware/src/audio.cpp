@@ -195,11 +195,42 @@ static void writeMono(const int16_t *s, int n) {
 }
 
 // ---------- WAV ----------
+// Light cues stored in the WAV itself (chunk "fxcu", lines "<ms> <effect>",
+// written by tools/make_cues.py), so a clip brings its own candle and eye
+// effects wherever it is played from.
+struct Cue {
+  uint32_t ms;
+  char name[16];
+};
+static const int MAX_CUES = 24;
+static void (*cueHandler)(const char *name) = nullptr;
+
 struct WavInfo {
   uint32_t rate;
   uint16_t channels;
   uint32_t dataLen;
+  Cue cues[MAX_CUES];
+  int nCues = 0;
 };
+
+static void readCues(File &f, uint32_t len, WavInfo &w) {
+  String text;
+  text.reserve(len);
+  for (uint32_t i = 0; i < len && i < 1024; i++) text += (char)f.read();
+  int at = 0;
+  while (at < (int)text.length() && w.nCues < MAX_CUES) {
+    int nl = text.indexOf('\n', at);
+    if (nl < 0) nl = text.length();
+    String line = text.substring(at, nl);
+    at = nl + 1;
+    int sp = line.indexOf(' ');
+    if (sp <= 0) continue;
+    Cue &c = w.cues[w.nCues++];
+    c.ms = line.substring(0, sp).toInt();
+    line.substring(sp + 1).trim();
+    strlcpy(c.name, line.substring(sp + 1).c_str(), sizeof(c.name));
+  }
+}
 
 static bool readWavHeader(File &f, WavInfo &w) {
   char id[4];
@@ -226,6 +257,10 @@ static bool readWavHeader(File &f, WavInfo &w) {
     } else if (!memcmp(id, "data", 4)) {
       w.dataLen = len;
       return haveFmt;
+    } else if (!memcmp(id, "fxcu", 4)) {
+      uint32_t next = f.position() + len + (len & 1);
+      readCues(f, len, w);
+      f.seek(next);
     } else {
       f.seek(f.position() + len + (len & 1));
     }
@@ -260,6 +295,10 @@ struct Source {
   virtual ~Source() {}
   virtual uint32_t rate() = 0;
   virtual int read(int16_t *mono, int n) = 0;
+  virtual const Cue *cues(int &n) {
+    n = 0;
+    return nullptr;
+  }
 };
 
 struct FileSource : Source {
@@ -281,6 +320,10 @@ struct FileSource : Source {
     free(raw);
   }
   uint32_t rate() override { return w.rate; }
+  const Cue *cues(int &n) override {
+    n = w.nCues;
+    return w.cues;
+  }
   int read(int16_t *mono, int n) override {
     if (!remaining) return -1;
     int want = min<uint32_t>(n * 2 * w.channels, remaining);
@@ -374,6 +417,10 @@ static void playSource(Source &src, bool mouth = true) {
   env.reset();
 
   echoClear();
+  int nCues;
+  const Cue *cues = src.cues(nCues);
+  int nextCue = 0;
+  uint32_t heardMs = 0;  // position of the block going to the speaker
   // Blocks still to flush from the ring after EOF, then the echo ringing out.
   int drain = leadBlocks + 1 + echoTailMs() / 10;
   bool ended = false;
@@ -392,8 +439,14 @@ static void playSource(Source &src, bool mouth = true) {
 
     head = (head + 1) % (leadBlocks + 1);
     if (!ended) filled = min(filled + 1, leadBlocks + 1);
-    if (filled > leadBlocks || ended)
+    if (filled > leadBlocks || ended) {
       writeMono(ring + head * blockN, blockN);  // oldest block
+      heardMs += 10;
+      while (nextCue < nCues && cues[nextCue].ms <= heardMs) {
+        if (cueHandler) cueHandler(cues[nextCue].name);
+        nextCue++;
+      }
+    }
   }
   free(ring);
   vTaskDelay(pdMS_TO_TICKS(dmaMs));
@@ -507,6 +560,30 @@ bool playRandom() {
 }
 
 void playTone() { playFile("@tone"); }
+
+void onCue(void (*handler)(const char *name)) { cueHandler = handler; }
+
+// A clip's light cues without its sound, on the clock instead of the audio.
+static WavInfo silent;
+static uint32_t silentStart = 0;
+static int silentNext = 0;
+
+bool lightsOnly(const String &path) {
+  File f = storage::clips().open(path, "r");
+  WavInfo w;
+  if (!f || !readWavHeader(f, w) || !w.nCues) return false;
+  silent = w;  // web handler and tickCues() both run in loop(): no lock
+  silentStart = millis();
+  silentNext = 0;
+  return true;
+}
+
+void tickCues() {
+  while (silentNext < silent.nCues && millis() - silentStart >= silent.cues[silentNext].ms) {
+    if (cueHandler) cueHandler(silent.cues[silentNext].name);
+    silentNext++;
+  }
+}
 
 void setPins(int bclk, int lrc, int din) {
   pinBclk = bclk;

@@ -12,9 +12,11 @@ enum Effect { NONE = 0, BLOW_OUT, FLARE, GHOST, TEST };
 void begin();
 void configure(int count, const String &order, int brightness, Mode mode);  // persisted
 void setSpeed(int percent);  // flicker speed 20..300 %, persisted
+void setVisitBright(int percent);  // brightness while someone is at the door, persisted
 void setVoiceReact(bool on);  // flare with the skull's voice, persisted
 void setOn(bool on);  // persisted; keeps the other settings
 void trigger(Effect e);
+Effect current(uint32_t &elapsedMs);  // the running effect, for LED 2 to join in
 String json();
 
 }  // namespace candles

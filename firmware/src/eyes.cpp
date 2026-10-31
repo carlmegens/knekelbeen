@@ -6,6 +6,7 @@
 #include "config.h"
 #include "jaw.h"
 #include "led2.h"
+#include "scene.h"
 
 namespace eyes {
 
@@ -45,7 +46,14 @@ static void eyesTask(void *) {
     // Squared for perceptually smoother fades at low brightness.
     k *= k;
     uint32_t c = now < tintUntil ? tintRgb : rgb;
-    eye.setPixelColor(0, ((c >> 16) & 0xFF) * k, ((c >> 8) & 0xFF) * k, (c & 0xFF) * k);
+    float r = (c >> 16) & 0xFF, g = (c >> 8) & 0xFF, b = c & 0xFF;
+    // Lightning: the eyes flash white-blue with the first candles.
+    float l = enabled && currentMode != OFF ? scene::lightning(now, 20) : 0;
+    if (l > 0.01f) {
+      k = max(k, l);
+      r += (200 - r) * l, g += (215 - g) * l, b += (255 - b) * l;
+    }
+    eye.setPixelColor(0, r * k, g * k, b * k);
     eye.show();
     led2::render();
     vTaskDelayUntil(&last, period);

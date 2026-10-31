@@ -95,7 +95,7 @@ griezels). Zeg nooit dat iemand een andere taal spreekt en vraag niet welke \
 taal het is. Spreek zelf altijd Nederlands."""
 
 # Words kids at the door are likely to say; biases the Dutch speech recognition.
-VOCABULARY = ["Knekelbeen", "snoep", "snoepje", "trick or treat", "Halloween",
+VOCABULARY = ["Knekelbeen", "snoep", "snoepje", "trick or treat", "snoep of je leven", "Halloween",
               "spook", "heks", "vampier", "zombie", "skelet", "pompoen",
               "griezel", "kostuum", "boe", "eng", "bang", "mop", "liedje"]
 
@@ -105,14 +105,31 @@ EFFECTS = {
     "kaarsen_op": "candles?effect=flare",      # candles flare up
     "spookgroen": "candles?effect=ghost",      # flames turn eerie green
     "ogen_flits": "eyes?flash=1",              # eyes flash brightly
+    "bliksem": "candles?effect=strike",        # one lightning strike over all lights
+    "donder": "candles?effect=thunder",        # rolling thunder: a few strikes
+    "rook": "smoke?puff=small",                # a little smoke (the skull keeps a cooldown)
+    "veel_rook": "smoke?puff=big",             # a lot of smoke
+    "snoep": "led2?candy=1",                   # light up the candy bowl: take one
 }
+# Effects with their own light, outside the shared cooldown: the candy bowl
+# must light up even right after a candle effect.
+OWN_LIGHT = {"snoep"}
+# Kids asking for candy; the bowl lights up with the skull's answer.
+# Loose, because small kids in masks: "trik o tiet".
+TREAT = re.compile(r"\btri(c?k)\b|\btreat|snoep of je leven|snoepje", re.I)
 EFFECT_RULE = """
 - Je kunt de kaarsen en je ogen laten reageren met de functie speciaal_effect. \
 Doe dat regelmatig als het past, bij de meeste spannende of grappige antwoorden, \
 en wissel af: kaarsen_uit als het donker wordt of een geest langskomt, \
 kaarsen_op bij een schrikmoment of "boe!", spookgroen bij iets spookachtigs of \
-magisch, ogen_flits als je iemand streng of geheimzinnig aankijkt. Gebruik niet \
-twee keer achter elkaar hetzelfde effect. Zeg nooit hardop dat je een functie gebruikt."""
+magisch, ogen_flits als je iemand streng of geheimzinnig aankijkt, bliksem bij \
+een plotselinge onthulling, donder bij iets dreigends of als je boos wordt, en heel \
+af en toe rook bij een toverspreuk of als je iets laat verdwijnen (veel_rook alleen \
+bij iets heel groots). Gebruik niet \
+twee keer achter elkaar hetzelfde effect. Zeg nooit hardop dat je een functie gebruikt.
+- Zeggen de kinderen "trick or treat", "snoep of je leven" of vragen ze om snoep, \
+zeg dan op je eigen griezelige manier dat ze één snoepje uit de schaal mogen \
+pakken, en gebruik meteen speciaal_effect snoep: dan licht de snoepschaal op."""
 
 # Words in the skull's own speech that trigger an effect automatically,
 # so the candles join in even when the model doesn't call the tool.
@@ -121,6 +138,9 @@ KEYWORD_EFFECTS = [
     (re.compile(r"\b(donker|duister|licht uit|kaarsen uit|uitblazen|blaas)", re.I), "kaarsen_uit"),
     (re.compile(r"\b(geest|geesten|spook|spoken|toverspreuk|betover)", re.I), "spookgroen"),
     (re.compile(r"\b(ik zie je|ik zie jou|kijk me aan|mijn ogen)", re.I), "ogen_flits"),
+    (re.compile(r"\b(bliksem|flits)", re.I), "bliksem"),
+    (re.compile(r"\b(donder|onweer|storm)", re.I), "donder"),
+    (re.compile(r"\b(pak (maar )?(er )?(één|een)|(één|een) snoepje)", re.I), "snoep"),
 ]
 EFFECT_COOLDOWN_S = 6.0
 
@@ -355,6 +375,9 @@ async def converse(session, mic_q, speaker, fx, gate, control, event, ws) -> Non
                     continue
                 if sc.input_transcription and sc.input_transcription.text:
                     turn["heard"] += sc.input_transcription.text
+                    if not turn.get("treat") and TREAT.search(turn["heard"]):
+                        turn["treat"] = True  # bowl lights up as he answers
+                        await play_effect("snoep", speaker, event)
                     if not turn["active"]:
                         await event(type="state", state="hearing")
                 if sc.output_transcription and sc.output_transcription.text:
@@ -371,7 +394,7 @@ async def converse(session, mic_q, speaker, fx, gate, control, event, ws) -> Non
                     if turn["heard"].strip():
                         control["has_history"] = True
                     turn.update(heard="", said="", active=False, last=time.monotonic(),
-                                scanned=0)
+                                scanned=0, treat=False)
                     wait = speaker.done_at - time.monotonic()
                     if wait > 0:
                         await asyncio.sleep(wait)
@@ -441,9 +464,10 @@ async def play_effect(effect: str, speaker, event, lead: float = 0.0) -> bool:
     """Fire an effect when the speech queued so far is heard (minus `lead`).
     Shared cooldown, so tool calls and keywords don't pile up."""
     now = time.monotonic()
-    if now - _last_effect["t"] < EFFECT_COOLDOWN_S:
-        return False
-    _last_effect.update(t=now, name=effect)
+    if effect not in OWN_LIGHT:
+        if now - _last_effect["t"] < EFFECT_COOLDOWN_S:
+            return False
+        _last_effect.update(t=now, name=effect)
     delay = max(0.0, speaker.done_at - now - lead)
     asyncio.create_task(fire_effect(speaker.addr[0], EFFECTS[effect], delay))
     await event(type="effect", text=effect)

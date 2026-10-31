@@ -254,6 +254,9 @@
    <option value="0">Flakkeren</option><option value="1">Altijd aan</option></select></div>
  <label>Helderheid <span id="cBv"></span>
   <input id="cB" type="range" min="0" max="100" aria-label="Helderheid van de kaarsen"></label>
+ <label>Helderheid bij bezoek <span id="cVBv"></span>
+  <input id="cVB" type="range" min="0" max="100" aria-label="Helderheid van de kaarsen bij bezoek">
+  <span class="help">Zolang er iemand voor de deur staat, gaan de kaarsen langzaam naar deze helderheid.</span></label>
  <label><input id="cVoice" type="checkbox"> Reageren op stem
   <span class="help">Aan: de vlammen laaien op en flakkeren wilder als de schedel praat.</span></label>
  <label>Flakkersnelheid <span id="cSv"></span>
@@ -264,20 +267,66 @@
   <button class="sm neutral" onclick="api('candles?effect=test')">Test</button></div>
  <div class="row"><button class="sm neutral" onclick="api('candles?effect=out')">Uitblazen</button>
   <button class="sm neutral" onclick="api('candles?effect=flare')">Opflakkeren</button>
-  <button class="sm neutral" onclick="api('candles?effect=ghost')">Spookgroen</button></div>
+  <button class="sm neutral" onclick="api('candles?effect=ghost')">Spookgroen</button>
+  <button class="sm neutral" onclick="api('candles?effect=strike')">Bliksem</button>
+  <button class="sm neutral" onclick="api('candles?effect=thunder')">Donder</button></div>
 </div>
 </details>
 <details class="panel" id="sec-led2"><summary>LED 2</summary>
  <label class="tog"><input id="lOn" type="checkbox"> LED 2 aan</label>
 <div class="sub" data-for="lOn">
- <div class="row"><label style="margin:0">Aantal <input id="lCount" type="number" min="1" max="60"></label>
-  <label style="margin:0">Kleur <input id="lColor" type="color" value="#ff2000" aria-label="Kleur van LED 2"></label></div>
- <div class="row"><select id="lMode" aria-label="Werking van LED 2">
-   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="4">Draaien</option><option value="5">Stemmeter</option></select></div>
+ <label>Aantal ledjes <input id="lCount" type="number" min="1" max="60"></label>
+ <p class="help" style="margin:0"><b>Rustig</b>: als er niemand voor de deur staat</p>
+ <div class="row"><select id="lMode" aria-label="Werking van LED 2 als het rustig is">
+   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="7">Kaarsvlam</option><option value="6">Ademen</option><option value="4">Draaien</option><option value="5">Stemmeter</option></select>
+  <input id="lColor" type="color" value="#ff2000" aria-label="Kleur van LED 2 als het rustig is"></div>
  <label>Helderheid <span id="lBv"></span>
-  <input id="lB" type="range" min="0" max="100" aria-label="Helderheid van LED 2"></label>
- <span class="help">Een WS2812-ledje, -strip of -ring op de LED 2-aansluiting, bijvoorbeeld in een lantaarn, ketel of pompoen. Zet Aantal op het aantal ledjes. Draaien en Stemmeter zijn voor een ring of strip.</span>
+  <input id="lB" type="range" min="0" max="100" aria-label="Helderheid van LED 2 als het rustig is"></label>
+ <p class="help" style="margin:0"><b>Bij bezoek</b>: zolang er iemand voor de deur staat</p>
+ <div class="row"><select id="lVMode" aria-label="Werking van LED 2 bij bezoek">
+   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="7">Kaarsvlam</option><option value="6">Ademen</option><option value="4">Draaien</option><option value="5">Stemmeter</option></select>
+  <input id="lVColor" type="color" value="#ffc080" aria-label="Kleur van LED 2 bij bezoek"></div>
+ <label>Helderheid <span id="lVBv"></span>
+  <input id="lVB" type="range" min="0" max="100" aria-label="Helderheid van LED 2 bij bezoek"></label>
+ <p class="help" style="margin:0"><b>Snoepschaal</b>: ledjes die na de andere in dezelfde ketting komen</p>
+ <label>Ledjes boven de snoepschaal <input id="lBCount" type="number" min="0" max="30">
+  <span class="help">0 = geen snoepschaal.</span></label>
+ <div class="row"><select id="lBMode" aria-label="Werking van de snoepschaal">
+   <option value="0">Met de stem mee</option><option value="1">Altijd aan</option><option value="3">Flakkeren</option><option value="7">Kaarsvlam</option><option value="6">Ademen</option><option value="4">Draaien</option><option value="5">Stemmeter</option></select>
+  <input id="lBColor" type="color" value="#ff6000" aria-label="Kleur van de snoepschaal"></div>
+ <label>Helderheid <span id="lBBv"></span>
+  <input id="lBB" type="range" min="0" max="100" aria-label="Helderheid van de snoepschaal"></label>
+ <div class="row"><label style="margin:0">Snoeplicht <input id="lCColor" type="color" value="#ffd890" aria-label="Kleur van het snoeplicht"></label>
+  <label style="margin:0">Duur (s) <input id="lCSecs" type="number" min="1" max="120"></label>
+  <button class="sm neutral" onclick="api('led2?candy=1')">Snoeplicht</button></div>
+ <span class="help">Zegt Knekelbeen dat de kinderen een snoepje mogen pakken (na "trick or treat" of "snoep of je leven"), dan licht de schaal glinsterend op.</span>
+ <label><input id="lFx" type="checkbox"> Meedoen met effecten
+  <span class="help">Spookgroen, opflakkeren, uitblazen en bliksem lopen ledje voor ledje over LED 2.</span></label>
+ <span class="help">Een WS2812-ledje, -strip of -ring op de LED 2-aansluiting, bijvoorbeeld in een lantaarn, pompoen of als extra licht in de klok. De lichten gaan rustig over van de ene naar de andere stand. Kaarsvlam flakkert als de kaarsen en negeert de kleur; Draaien en Stemmeter zijn voor een ring of strip.</span>
  <button class="sm" onclick="saveLed2(this)">Opslaan</button>
+</div>
+</details>
+<details class="panel" id="sec-visit"><summary>Bezoek</summary>
+ <label>Bezoek duurt (s) <input id="vHold" type="number" min="5" max="600">
+  <span class="help">Zo lang na het laatste teken van iemand voor de deur (bewegingssensor, of camera en radar via Home Assistant) blijven de kaarsen en LED 2 in hun bezoekstand. Zolang de schedel praat, telt het bezoek door.</span></label>
+ <p class="help" id="vState"></p>
+ <div class="row"><button class="sm" onclick="saveVisit(this)">Opslaan</button>
+  <button class="sm neutral" onclick="testPerson()">Persoon testen</button></div>
+ <span class="help">Persoon testen doet alsof er iemand voor de deur staat: de ogen flitsen, de lichten gaan naar hun bezoekstand en staat de AI-schedel aan, dan begroet hij je.</span>
+</details>
+<details class="panel" id="sec-smoke"><summary>Rookmachine</summary>
+ <label class="tog"><input id="sOn" type="checkbox"> Rookmachine aan</label>
+<div class="sub" data-for="sOn">
+ <label>Adres van de Shelly <input id="sHost" type="text" placeholder="192.168.2.181" autocomplete="off"></label>
+ <label>Wachttijd (s) <input id="sCool" type="number" min="0" max="3600">
+  <span class="help">Na een rookstoot komt er zo lang geen nieuwe, ook niet als de AI of een clip erom vraagt.</span></label>
+ <div class="row"><label style="margin:0">Beetje rook (s) <input id="sSmall" type="number" min="0.2" max="10" step="0.1"></label>
+  <label style="margin:0">Veel rook (s) <input id="sBig" type="number" min="0.2" max="10" step="0.1"></label></div>
+ <p class="help" id="sState"></p>
+ <div class="row"><button class="sm" onclick="saveSmoke(this)">Opslaan</button>
+  <button class="sm neutral" onclick="api('smoke?test=small');setTimeout(smokePoll,1500)">Beetje rook</button>
+  <button class="sm neutral" onclick="api('smoke?test=big');setTimeout(smokePoll,1500)">Veel rook</button></div>
+ <span class="help">Een Shelly 1 met de HomeKit-firmware die zo lang het rookknopje indrukt. Clips (zoals het orgel bij de deurbel) en de AI geven rook met de effecten rook en veel_rook. De knoppen hier negeren de wachttijd.</span>
 </div>
 </details>
 <h2 class="cat wide">&#128064; Beweging</h2>
@@ -660,22 +709,41 @@ async function loadSettings(){
  const jaw=await getJ('jaw');if(jaw){setSwitch('jOn',jaw.on);$('sSoft').value=jaw.soft;$('sSoftv').textContent=softLbl(jaw.soft)}
  if(eyes){setSwitch('eOn',eyes.on);$('eyeColor').value='#'+eyes.color.toLowerCase();$('eyeB').value=eyes.bright;$('eyeBv').textContent=eyes.bright+'%';$('eyeMode').value=eyes.mode}
  if(cand){setSwitch('kOn',cand.on);$('cCount').value=cand.count;$('cOrder').value=cand.order;$('cB').value=cand.bright;$('cBv').textContent=cand.bright+'%';
-  $('cMode').value=cand.mode;$('cS').value=cand.speed;$('cSv').textContent=cand.speed+'%';$('cVoice').checked=cand.voice}
+  $('cMode').value=cand.mode;$('cS').value=cand.speed;$('cSv').textContent=cand.speed+'%';$('cVoice').checked=cand.voice;
+  $('cVB').value=cand.visit;$('cVBv').textContent=cand.visit+'%'}
  const [turn,pir,led2,amps]=await Promise.all([getJ('turn'),getJ('pir'),getJ('led2'),getJ('amps')]);
  if(turn){setSwitch('tOn',turn.enabled);$('tLively').checked=turn.lively;$('tCenter').value=turn.center;$('tRange').value=turn.range}
  if(pir){setSwitch('pOn',pir.enabled);$('pCool').value=pir.cooldown;pirPoll()}
  if(led2){$('lCount').value=led2.count;$('lColor').value='#'+led2.color.toLowerCase();$('lB').value=led2.bright;
-  $('lBv').textContent=led2.bright+'%';$('lMode').value=led2.mode;setSwitch('lOn',led2.on)}
+  $('lBv').textContent=led2.bright+'%';$('lMode').value=led2.mode;
+  $('lVColor').value='#'+led2.vcolor.toLowerCase();$('lVB').value=led2.vbright;$('lVBv').textContent=led2.vbright+'%';$('lVMode').value=led2.vmode;
+  $('lFx').checked=led2.fx;
+ $('lBCount').value=led2.bcount;$('lBColor').value='#'+led2.bcolor.toLowerCase();$('lBB').value=led2.bbright;$('lBBv').textContent=led2.bbright+'%';
+ $('lBMode').value=led2.bmode;$('lCColor').value='#'+led2.ccolor.toLowerCase();$('lCSecs').value=led2.csecs;setSwitch('lOn',led2.on)}
+ const visit=await getJ('visit');if(visit){$('vHold').value=visit.hold;visitPoll()}
+ const smk=await getJ('smoke');if(smk){setSwitch('sOn',smk.on);$('sHost').value=smk.host;$('sCool').value=smk.cooldown;$('sSmall').value=smk.small/1000;$('sBig').value=smk.big/1000;smokePoll()}
  if(amps){setSwitch('aOn',amps.on);$('aSleep').checked=amps.sleep;$('aBass').value=amps.bass;$('aEchoOn').checked=amps.echoon;$('aEcho').value=amps.echo;$('aEchoMs').value=amps.echoms;syncEcho()}}
 async function saveSync(btn){await api('sync?gate='+$('sGate').value+'&sens='+$('sSens').value+'&lead='+$('sLead').value);flash(btn)}
 async function saveCal(btn){await api('cal?closed='+$('sC').value+'&open='+$('sO').value);flash(btn)}
 async function saveEyes(btn){await api('eyes?color='+$('eyeColor').value.slice(1)+'&bright='+$('eyeB').value+'&mode='+$('eyeMode').value);flash(btn)}
-async function saveCandles(btn){await api('candles?count='+$('cCount').value+'&order='+$('cOrder').value+'&bright='+$('cB').value+'&mode='+$('cMode').value);flash(btn)}
+async function saveCandles(btn){await api('candles?count='+$('cCount').value+'&order='+$('cOrder').value+'&bright='+$('cB').value+'&mode='+$('cMode').value+'&visit='+$('cVB').value);flash(btn)}
 async function saveTurn(btn){await api('turn?on='+($('tOn').checked?1:0)+'&center='+$('tCenter').value+
  '&range='+$('tRange').value+'&lively='+($('tLively').checked?1:0));flash(btn)}
 async function savePir(btn){await api('pir?on='+($('pOn').checked?1:0)+'&cooldown='+$('pCool').value);flash(btn)}
 async function saveLed2(btn){await api('led2?count='+$('lCount').value+'&color='+$('lColor').value.slice(1)+
- '&bright='+$('lB').value+'&mode='+$('lMode').value);flash(btn)}
+ '&bright='+$('lB').value+'&mode='+$('lMode').value+
+ '&vcolor='+$('lVColor').value.slice(1)+'&vbright='+$('lVB').value+'&vmode='+$('lVMode').value+
+ '&bcount='+$('lBCount').value+'&bcolor='+$('lBColor').value.slice(1)+'&bbright='+$('lBB').value+'&bmode='+$('lBMode').value+
+ '&ccolor='+$('lCColor').value.slice(1)+'&csecs='+$('lCSecs').value);flash(btn)}
+async function saveVisit(btn){await api('visit?hold='+$('vHold').value);flash(btn)}
+async function testPerson(){await api('pir?test=1');visitPoll();setTimeout(pirPoll,2500)}
+async function visitPoll(){if($('viewSettings').hidden)return;const j=await getJ('visit');if(!j)return;
+ $('vState').textContent=j.present?'Er staat nu iemand voor de deur.':'Er staat nu niemand voor de deur.'}
+setInterval(visitPoll,2000);
+async function saveSmoke(btn){await api('smoke?on='+($('sOn').checked?1:0)+'&host='+encodeURIComponent($('sHost').value.trim())+'&cooldown='+$('sCool').value+'&small='+$('sSmall').value+'&big='+$('sBig').value);if(btn)flash(btn)}
+async function smokePoll(){if($('viewSettings').hidden)return;const j=await getJ('smoke');if(!j)return;
+ $('sState').textContent=j.ago<0?'Nog geen rook sinds het opstarten.':'Laatste keer '+j.ago+' s geleden: '+j.result+'.'}
+setInterval(smokePoll,5000);
 async function pirPoll(){if($('viewSettings').hidden)return;const j=await getJ('pir');if(!j)return;
  $('pState').textContent=(j.motion?'Ziet nu beweging. ':'Ziet nu niemand. ')+
   (j.ago<0?'Nog geen begroeting sinds het opstarten.':j.count+'× begroet, laatste keer '+j.ago+' s geleden.')}
@@ -690,7 +758,11 @@ onSwitch('aOn',v=>api('amps?on='+v));onSwitch('jOn',v=>api('jaw?on='+v));
 onSwitch('eOn',v=>api('eyes?on='+v));onSwitch('kOn',v=>api('candles?on='+v));
 onSwitch('lOn',v=>api('led2?on='+v));onSwitch('tOn',()=>api(turnQ()));
 onSwitch('pOn',v=>api('pir?on='+v+'&cooldown='+$('pCool').value));
+onSwitch('sOn',()=>saveSmoke());
 $('lB').oninput=()=>$('lBv').textContent=$('lB').value+'%';
+$('lVB').oninput=()=>$('lVBv').textContent=$('lVB').value+'%';
+$('lBB').oninput=()=>$('lBBv').textContent=$('lBB').value+'%';
+$('lFx').onchange=()=>api('led2?fx='+($('lFx').checked?1:0));
 $('aSleep').onchange=()=>api('amps?sleep='+($('aSleep').checked?1:0));
 $('aBass').onchange=()=>api('amps?bass='+$('aBass').value);
 function syncEcho(){const on=$('aEchoOn').checked;for(const id of ['aEcho','aEchoMs'])$(id).disabled=!on;
@@ -699,6 +771,7 @@ const setEcho=()=>{syncEcho();api('amps?echoon='+($('aEchoOn').checked?1:0)+'&ec
 $('aEchoOn').onchange=setEcho;$('aEcho').onchange=setEcho;$('aEchoMs').onchange=setEcho;
 $('eyeB').oninput=()=>$('eyeBv').textContent=$('eyeB').value+'%';
 $('cB').oninput=()=>$('cBv').textContent=$('cB').value+'%';
+$('cVB').oninput=()=>$('cVBv').textContent=$('cVB').value+'%';
 $('cVoice').onchange=()=>api('candles?voice='+($('cVoice').checked?1:0));
 // Live-applied sliders: send at most one request at a time, keep the latest value.
 function liveSender(path){let busy=false,next=null;

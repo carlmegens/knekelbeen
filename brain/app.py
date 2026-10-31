@@ -427,11 +427,17 @@ HA_STATUS = {"state": "uit"}
 async def watch_pir(_app) -> None:
     """Polls the skull's PIR counter; a new arrival lets a running AI session
     greet them. (Polling, because the laptop firewall keeps the skull from
-    calling in.) With Home Assistant configured, its presence sensors are the
-    trigger instead."""
+    calling in.) With Home Assistant configured, its presence sensors are a
+    trigger too, and tell the skull someone's there (its lights go to their
+    visit look). The PIR counter also goes up with "Persoon testen"."""
     if ha.configured():
-        _app["pir_watch"] = asyncio.create_task(ha.listen(gemini.note_visitor, HA_STATUS))
-        return
+        def seen():
+            asyncio.create_task(gemini.fire_effect(SKULL, "visit?now=1", 0))
+
+        def ring():  # the bell plays its organ tune; the lights play along
+            asyncio.create_task(gemini.fire_effect(SKULL, f"lights?f={ha.DOORBELL_CLIP}", 0))
+        _app["ha_watch"] = asyncio.create_task(
+            ha.listen(gemini.note_visitor, seen, ring, HA_STATUS))
 
     async def loop():
         last = None
