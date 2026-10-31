@@ -248,6 +248,9 @@ async def run(ws, mic_q: asyncio.Queue, speaker: ai.SkullSpeaker, fx: gemini.Voi
             effect = r.get("effect")
             if effect not in gemini.EFFECTS:  # the words can still trigger one
                 effect = next((e for p, e in gemini.KEYWORD_EFFECTS if p.search(shown(said))), None)
+            # Smoke and the candy bowl come on top (e.g. "boe!": candles and smoke).
+            extra = {e for p, e in gemini.KEYWORD_EFFECTS
+                     if e in gemini.OWN_LIGHT and e != effect and p.search(shown(said))}
             started = False
             try:
                 async with aiohttp.ClientSession() as http:
@@ -261,6 +264,9 @@ async def run(ws, mic_q: asyncio.Queue, speaker: ai.SkullSpeaker, fx: gemini.Voi
                         if effect:  # lands on the start of the sentence
                             await gemini.play_effect(effect, speaker, event, lead=0.0)
                             effect = None
+                        for e in extra:
+                            await gemini.play_effect(e, speaker, event, lead=0.0)
+                        extra = set()
             except Exception as e:
                 await event(type="error", text=error_text(e))
                 return

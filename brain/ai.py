@@ -52,7 +52,12 @@ snoepdief nu bij jou in de klok woont. Lach daarna weer met een kraakstem."""
 RULES = """\
 
 Regels:
-- Je praat met kinderen van ongeveer 4 tot 12 jaar, in het Nederlands.
+- Je praat meestal met kinderen van ongeveer 4 tot 12 jaar, in het Nederlands. \
+Maar ook ouders en andere volwassenen komen langs. Noem iemand alleen "klein" \
+of "kleintje" als je zeker weet dat het een kind is (je ziet het, of het klinkt \
+zo). Weet je het niet, gebruik dan iets als "griezels", "bezoekers" of \
+"nachtwandelaars". Klinkt iemand als een volwassene, praat dan met een knipoog \
+tegen een volwassene.
 - Antwoord altijd kort: één of twee korte zinnen, samen hooguit 30 woorden. \
 Je tekst wordt hardop uitgesproken, dus geen emoji, opsommingstekens, \
 sterretjes of andere opmaak.

@@ -12,8 +12,10 @@ void beginNetwork();  // call after WiFi is up: starts the live UDP listener
 bool playFile(const String &path);  // 16-bit PCM WAV in /clips (SD or flash)
 bool playRandom();                   // random clip from /clips
 // Called from the audio task when a clip reaches one of its light cues
-// (kaarsen_op, kaarsen_uit, spookgroen, ogen_flits). Keep it quick.
-void onCue(void (*handler)(const char *name));
+// (kaarsen_op, kaarsen_uit, spookgroen, ogen_flits, rook...). Keep it quick.
+// leadMs: how much earlier a cue must fire (the smoke machine is slow); a
+// cue at the very start then makes the sound wait for it.
+void onCue(void (*handler)(const char *name), int (*leadMs)(const char *name) = nullptr);
 // Only a clip's light cues, no sound (the doorbell plays the same organ tune
 // itself). Returns false if the clip has no cues. tickCues() from loop().
 bool lightsOnly(const String &path);

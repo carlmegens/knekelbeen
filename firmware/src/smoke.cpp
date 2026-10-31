@@ -8,7 +8,7 @@ namespace smoke {
 static Preferences prefs;
 static bool enabled = false;
 static String host;
-static int cooldownS = 60, smallMs = 1500, bigMs = 5000;
+static int cooldownS = 60, smallMs = 1500, bigMs = 5000, lead = 500;
 static volatile int wanted = 0;  // 0 none, 1 small, 2 big
 static volatile bool testing = false;
 static uint32_t lastPuff = 0, offAt = 0;
@@ -22,14 +22,19 @@ void begin() {
   cooldownS = prefs.getInt("cool", 60);
   smallMs = prefs.getInt("small", 1500);
   bigMs = prefs.getInt("big", 5000);
+  lead = prefs.getInt("lead", 500);
 }
 
-void setConfig(bool on, const String &h, int cool, int small, int big) {
+int leadMs() { return lead; }
+
+void setConfig(bool on, const String &h, int cool, int small, int big, int ld) {
   enabled = on;
   if (h.length() < 64 && h.indexOf('/') < 0 && h.indexOf('"') < 0) host = h;
   cooldownS = constrain(cool, 0, 3600);
   smallMs = constrain(small, 200, 10000);
   bigMs = constrain(big, 200, 10000);
+  lead = constrain(ld, 0, 3000);
+  prefs.putInt("lead", lead);
   prefs.putBool("on", enabled);
   prefs.putString("host", host);
   prefs.putInt("cool", cooldownS);
@@ -82,7 +87,7 @@ void service() {
 String json() {
   long ago = puffed ? (long)((millis() - lastPuff) / 1000) : -1;
   return String("{\"on\":") + (enabled ? "true" : "false") + ",\"host\":\"" + host +
-         "\",\"cooldown\":" + cooldownS + ",\"small\":" + smallMs + ",\"big\":" + bigMs +
+         "\",\"cooldown\":" + cooldownS + ",\"small\":" + smallMs + ",\"big\":" + bigMs + ",\"lead\":" + lead +
          ",\"ago\":" + ago + ",\"result\":\"" + lastResult + "\"}";
 }
 

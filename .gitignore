@@ -13,3 +13,6 @@ radar/secrets.yaml
 radar/.esphome/
 clips/adres.wav
 clips/*.local.txt
+
+# Clips met namen van bekenden: alleen lokaal en op de SD-kaart
+clips/naam_*.wav

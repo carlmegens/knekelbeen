@@ -91,7 +91,7 @@
   <button id="clipEdit" class="sm neutral" onclick="toggleEdit()">Verwijderen…</button>
   <span id="free" class="help"></span>
  </div>
- <span class="help">Begint de naam met fx_, dan komt hij bij de geluidseffecten en beweegt de kaak niet mee.</span>
+ <span class="help">Begint de naam met fx_, dan komt hij bij de geluidseffecten en beweegt de kaak niet mee. Met naam_ ervoor komt hij bij de namen.</span>
  <input id="file" type="file" accept=".wav,audio/wav" multiple hidden>
 </section>
 
@@ -254,6 +254,8 @@
   <span class="help">Na een rookstoot komt er zo lang geen nieuwe, ook niet als de AI of een clip erom vraagt.</span></label>
  <div class="row"><label style="margin:0">Beetje rook (s) <input id="sSmall" type="number" min="0.2" max="10" step="0.1"></label>
   <label style="margin:0">Veel rook (s) <input id="sBig" type="number" min="0.2" max="10" step="0.1"></label></div>
+ <label>Voorsprong (s) <input id="sLead" type="number" min="0" max="3" step="0.1">
+  <span class="help">Hoe lang de machine nodig heeft voordat er rook uitkomt. Zo veel eerder wordt het knopje ingedrukt, zodat de rook precies op het moment komt (bij "boe!" bijvoorbeeld).</span></label>
  <p class="help" id="sState"></p>
  <div class="row"><button class="sm" onclick="saveSmoke(this)">Opslaan</button>
   <button class="sm neutral" onclick="api('smoke?test=small');setTimeout(smokePoll,1500)">Beetje rook</button>
@@ -314,7 +316,7 @@ function say(t,err){const s=$('status');s.textContent=t||'';s.className=err?'err
 async function api(p,opt){
  try{const r=await fetch(B+p,opt);if(offline){offline=false;say('')}return r}
  catch(e){offline=true;say(MSG.offline,true);throw e}}
-const pretty=n=>{const s=n.replace(/\.wav$/i,'').replace(/^fx_/,'').replace(/_/g,' ');return s.charAt(0).toUpperCase()+s.slice(1)};
+const pretty=n=>{const s=n.replace(/\.wav$/i,'').replace(/^(fx|naam)_/,'').replace(/_/g,' ');return s.charAt(0).toUpperCase()+s.slice(1)};
 function flash(btn){const s=document.createElement('span');s.className='saved';s.textContent='Opgeslagen';
  btn.after(s);setTimeout(()=>s.remove(),2000)}
 function ask(title,body,ok,no){return new Promise(res=>{const d=$('dlg');
@@ -367,7 +369,8 @@ async function loadClips(){
  clipNames=j.clips.map(c=>c.name);const box=$('clips');box.innerHTML='';
  if(!j.clips.length){const p=document.createElement('p');p.className='help';p.textContent=MSG.empty;box.append(p)}
  const fx=c=>c.name.startsWith('fx_');
- for(const [title,list] of [['Stem',j.clips.filter(c=>!fx(c))],['Geluidseffecten',j.clips.filter(fx)]]){
+ const naam=c=>c.name.startsWith('naam_');
+ for(const [title,list] of [['Stem',j.clips.filter(c=>!fx(c)&&!naam(c))],['Geluidseffecten',j.clips.filter(fx)],['Namen',j.clips.filter(naam)]]){
   if(!list.length)continue;
   const h=document.createElement('h3');h.textContent=title;
   const g=document.createElement('div');g.className='board';
@@ -459,10 +462,10 @@ async function visitPoll(){if(!$('setup').open)return;try{const j=await(await ap
  $('vState').textContent=j.present?'Er staat nu iemand voor de deur.':'Er staat nu niemand voor de deur.'}catch(e){}}
 api('visit').then(r=>r.json()).then(j=>{$('vHold').value=j.hold;visitPoll()}).catch(()=>{});
 setInterval(visitPoll,2000);
-async function saveSmoke(btn){await api('smoke?on='+($('sOn').checked?1:0)+'&host='+encodeURIComponent($('sHost').value.trim())+'&cooldown='+$('sCool').value+'&small='+$('sSmall').value+'&big='+$('sBig').value);if(btn)flash(btn)}
+async function saveSmoke(btn){await api('smoke?on='+($('sOn').checked?1:0)+'&host='+encodeURIComponent($('sHost').value.trim())+'&cooldown='+$('sCool').value+'&small='+$('sSmall').value+'&big='+$('sBig').value+'&lead='+$('sLead').value);if(btn)flash(btn)}
 async function smokePoll(){if(!$('setup').open)return;try{const j=await(await api('smoke')).json();
  $('sState').textContent=j.ago<0?'Nog geen rook sinds het opstarten.':'Laatste keer '+j.ago+' s geleden: '+j.result+'.'}catch(e){}}
-api('smoke').then(r=>r.json()).then(j=>{setSwitch('sOn',j.on);$('sHost').value=j.host;$('sCool').value=j.cooldown;$('sSmall').value=j.small/1000;$('sBig').value=j.big/1000;smokePoll()}).catch(()=>{});
+api('smoke').then(r=>r.json()).then(j=>{setSwitch('sOn',j.on);$('sHost').value=j.host;$('sCool').value=j.cooldown;$('sSmall').value=j.small/1000;$('sBig').value=j.big/1000;$('sLead').value=j.lead/1000;smokePoll()}).catch(()=>{});
 setInterval(smokePoll,5000);
 async function saveLed2(btn){await api(led2Q());flash(btn)}
 // Each group's on/off switch greys out (and locks) the settings under it.

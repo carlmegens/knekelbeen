@@ -42,13 +42,15 @@ VISITOR_GREETING = ("[bewegingssensor] Er komt net iemand bij je staan. Begroet 
 VISITOR_GREETING_SEEN = (
     "[camera] Er komen net bezoekers bij je staan; dit is wat je ziet. Begroet ze in "
     "één of twee korte zinnen en noem daarbij meteen iets concreets dat je ziet: hun "
-    "kostuum, masker, hoed, attribuut of hoeveel het er zijn. Verzin niets wat je niet "
+    "kostuum, masker, hoed, attribuut of hoeveel het er zijn. Zie je volwassenen, "
+    "spreek die dan niet als kinderen aan. Verzin niets wat je niet "
     "ziet. Is het beeld zwart-wit (infrarood), noem dan geen kleuren. Begin meteen te "
     "praten; gebruik bij deze begroeting geen speciaal_effect.")
 # Thingino camera at the door; its API key goes as ?token= (the camera's web
 # server drops the X-API-Key header). Full 2304x1296 JPEG, ~0.4 s.
 CAM = os.environ.get("SKULL_CAM", "")
 CAM_KEY = os.environ.get("SKULL_CAM_KEY", "")
+HA_CAMERA = os.environ.get("HA_CAMERA", "")  # e.g. camera.halloween (Frigate)
 VISITOR_TALKING_S = 12   # quieter than this = still talking with the last group
 VISITOR_EXPIRES_S = 20   # a greeting that couldn't happen by then is dropped
 _visitor = {"at": 0.0}   # last motion, shared by all sessions
@@ -58,19 +60,42 @@ def note_visitor() -> None:
     _visitor["at"] = time.monotonic()
 
 
-async def snapshot() -> bytes | None:
-    """A fresh JPEG from the door camera, or None (no camera, or no answer).
-    Images are never stored; they only go into the Gemini session."""
-    if not (CAM and CAM_KEY):
-        return None
+async def _fetch_jpeg(url: str, timeout: float, **kw) -> bytes | None:
     try:
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(2)) as s:
-            async with s.get(f"http://{CAM}/x/ch0.jpg", params={"token": CAM_KEY}) as r:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(timeout)) as s:
+            async with s.get(url, **kw) as r:
                 if r.status == 200 and r.content_type == "image/jpeg":
                     return await r.read()
     except (aiohttp.ClientError, asyncio.TimeoutError):
-        pass  # no camera: greet without seeing them
+        pass
     return None
+
+
+CAM_WAIT_S = 1.2  # how long the greeting waits for the sharp camera image
+
+
+async def snapshot() -> bytes | None:
+    """A fresh JPEG from the door camera, or None (no camera, or no answer).
+    Images are never stored; they only go into the Gemini session.
+
+    Asks both at once: the camera's own full-size image (2304x1296, ~0.5-0.9 s
+    at 10 fps) and Frigate's latest frame via Home Assistant (HA_CAMERA,
+    768x432 but instant, as Frigate already streams the camera). The sharp
+    one wins if it comes within CAM_WAIT_S, so the greeting is never held
+    up long."""
+    cam = frigate = None
+    if CAM and CAM_KEY:
+        cam = asyncio.create_task(_fetch_jpeg(
+            f"http://{CAM}/x/ch0.jpg", CAM_WAIT_S, params={"token": CAM_KEY}))
+    if HA_CAMERA and os.environ.get("HA_URL") and os.environ.get("HA_TOKEN"):
+        frigate = asyncio.create_task(_fetch_jpeg(
+            f"{os.environ['HA_URL'].rstrip('/')}/api/camera_proxy/{HA_CAMERA}", 1.5,
+            headers={"Authorization": f"Bearer {os.environ['HA_TOKEN']}"}))
+    if cam and (image := await cam):
+        if frigate:
+            frigate.cancel()
+        return image
+    return await frigate if frigate else None  # None: greet without seeing them
 
 
 def current_model() -> str:
@@ -111,9 +136,10 @@ EFFECTS = {
     "veel_rook": "smoke?puff=big",             # a lot of smoke
     "snoep": "led2?candy=1",                   # light up the candy bowl: take one
 }
-# Effects with their own light, outside the shared cooldown: the candy bowl
-# must light up even right after a candle effect.
-OWN_LIGHT = {"snoep"}
+# Effects on their own device, outside the shared cooldown: the candy bowl
+# must light up even right after a candle effect, and "boe!" gives both
+# flaring candles and smoke (the skull keeps its own smoke cooldown).
+OWN_LIGHT = {"snoep", "rook", "veel_rook"}
 # Kids asking for candy; the bowl lights up with the skull's answer.
 # Loose, because small kids in masks: "trik o tiet".
 TREAT = re.compile(r"\btri(c?k)\b|\btreat|snoep of je leven|snoepje", re.I)
@@ -135,6 +161,7 @@ pakken, en gebruik meteen speciaal_effect snoep: dan licht de snoepschaal op."""
 # so the candles join in even when the model doesn't call the tool.
 KEYWORD_EFFECTS = [
     (re.compile(r"\bboe+\b", re.I), "kaarsen_op"),
+    (re.compile(r"\bboe+\b", re.I), "rook"),
     (re.compile(r"\b(donker|duister|licht uit|kaarsen uit|uitblazen|blaas)", re.I), "kaarsen_uit"),
     (re.compile(r"\b(geest|geesten|spook|spoken|toverspreuk|betover)", re.I), "spookgroen"),
     (re.compile(r"\b(ik zie je|ik zie jou|kijk me aan|mijn ogen)", re.I), "ogen_flits"),
@@ -460,6 +487,22 @@ async def converse(session, mic_q, speaker, fx, gate, control, event, ws) -> Non
 _last_effect = {"t": 0.0, "name": ""}
 
 
+_smoke_lead = {"s": 0.5, "at": -1e9}  # the skull's smoke head start, refreshed now and then
+
+
+async def smoke_lead(host: str) -> float:
+    """How long the smoke machine needs (set on the skull's page)."""
+    if time.monotonic() - _smoke_lead["at"] > 60:
+        _smoke_lead["at"] = time.monotonic()
+        try:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(1)) as s:
+                async with s.get(f"http://{host}/smoke") as r:
+                    _smoke_lead["s"] = (await r.json(content_type=None))["lead"] / 1000
+        except (aiohttp.ClientError, asyncio.TimeoutError, ValueError, KeyError):
+            pass
+    return _smoke_lead["s"]
+
+
 async def play_effect(effect: str, speaker, event, lead: float = 0.0) -> bool:
     """Fire an effect when the speech queued so far is heard (minus `lead`).
     Shared cooldown, so tool calls and keywords don't pile up."""
@@ -468,7 +511,9 @@ async def play_effect(effect: str, speaker, event, lead: float = 0.0) -> bool:
         if now - _last_effect["t"] < EFFECT_COOLDOWN_S:
             return False
         _last_effect.update(t=now, name=effect)
-    delay = max(0.0, speaker.done_at - now - lead)
+    if effect in ("rook", "veel_rook"):
+        lead += await smoke_lead(speaker.addr[0])
+    delay = max(0.0, speaker.done_at - time.monotonic() - lead)
     asyncio.create_task(fire_effect(speaker.addr[0], EFFECTS[effect], delay))
     await event(type="effect", text=effect)
     return True
@@ -479,11 +524,12 @@ async def keyword_effects(turn, speaker, event) -> None:
     # back up a few characters to catch words split across fragments).
     start = max(0, turn["scanned"] - 12)
     text = turn["said"][start:]
+    fired = False  # one candle/eye effect at a time; smoke and the bowl on top
     for pattern, effect in KEYWORD_EFFECTS:
-        if pattern.search(text):
+        if (effect in OWN_LIGHT or not fired) and pattern.search(text):
             # The transcript trails the audio a little; fire a bit early.
             if await play_effect(effect, speaker, event, lead=0.6):
-                break
+                fired |= effect not in OWN_LIGHT
     turn["scanned"] = len(turn["said"])
 
 

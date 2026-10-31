@@ -204,6 +204,9 @@ struct Cue {
 };
 static const int MAX_CUES = 24;
 static void (*cueHandler)(const char *name) = nullptr;
+// How much earlier a cue must fire (ms), e.g. the smoke machine's delay.
+static int (*cueLead)(const char *name) = nullptr;
+static int leadOf(const Cue &c) { return cueLead ? constrain(cueLead(c.name), 0, 3000) : 0; }
 
 struct WavInfo {
   uint32_t rate;
@@ -419,7 +422,22 @@ static void playSource(Source &src, bool mouth = true) {
   echoClear();
   int nCues;
   const Cue *cues = src.cues(nCues);
-  int nextCue = 0;
+  bool fired[MAX_CUES] = {};
+  auto fireDue = [&](int32_t t) {  // t: ms into the clip, as heard
+    for (int i = 0; i < nCues; i++)
+      if (!fired[i] && (int32_t)cues[i].ms - leadOf(cues[i]) <= t) {
+        fired[i] = true;
+        if (cueHandler) cueHandler(cues[i].name);
+      }
+  };
+  // A cue that needs a head start the clip doesn't have (smoke right at the
+  // start): fire it, and let the sound wait.
+  int32_t wait = 0;
+  for (int i = 0; i < nCues; i++) wait = max(wait, (int32_t)leadOf(cues[i]) - (int32_t)cues[i].ms);
+  for (int32_t t = -wait; t < 0 && !stopFlag; t += 10) {
+    fireDue(t);
+    vTaskDelay(pdMS_TO_TICKS(10));
+  }
   uint32_t heardMs = 0;  // position of the block going to the speaker
   // Blocks still to flush from the ring after EOF, then the echo ringing out.
   int drain = leadBlocks + 1 + echoTailMs() / 10;
@@ -442,10 +460,7 @@ static void playSource(Source &src, bool mouth = true) {
     if (filled > leadBlocks || ended) {
       writeMono(ring + head * blockN, blockN);  // oldest block
       heardMs += 10;
-      while (nextCue < nCues && cues[nextCue].ms <= heardMs) {
-        if (cueHandler) cueHandler(cues[nextCue].name);
-        nextCue++;
-      }
+      fireDue(heardMs);
     }
   }
   free(ring);
@@ -549,7 +564,8 @@ bool playRandom() {
   File dir = storage::clips().open("/clips");
   std::vector<String> names;
   for (File f = dir.openNextFile(); f; f = dir.openNextFile())
-    if (String(f.name()).endsWith(".wav") && !isEffect(f.name()))
+    // Not the effects, and not the clips that greet someone by name.
+    if (String(f.name()).endsWith(".wav") && !isEffect(f.name()) && !String(f.name()).startsWith("naam_"))
       names.push_back(f.name());
   if (names.empty()) return false;
   static int last = -1;
@@ -561,12 +577,15 @@ bool playRandom() {
 
 void playTone() { playFile("@tone"); }
 
-void onCue(void (*handler)(const char *name)) { cueHandler = handler; }
+void onCue(void (*handler)(const char *name), int (*leadMs)(const char *name)) {
+  cueHandler = handler;
+  cueLead = leadMs;
+}
 
 // A clip's light cues without its sound, on the clock instead of the audio.
 static WavInfo silent;
 static uint32_t silentStart = 0;
-static int silentNext = 0;
+static bool silentFired[MAX_CUES];
 
 bool lightsOnly(const String &path) {
   File f = storage::clips().open(path, "r");
@@ -574,15 +593,17 @@ bool lightsOnly(const String &path) {
   if (!f || !readWavHeader(f, w) || !w.nCues) return false;
   silent = w;  // web handler and tickCues() both run in loop(): no lock
   silentStart = millis();
-  silentNext = 0;
+  memset(silentFired, 0, sizeof silentFired);
   return true;
 }
 
 void tickCues() {
-  while (silentNext < silent.nCues && millis() - silentStart >= silent.cues[silentNext].ms) {
-    if (cueHandler) cueHandler(silent.cues[silentNext].name);
-    silentNext++;
-  }
+  int32_t t = millis() - silentStart;
+  for (int i = 0; i < silent.nCues; i++)
+    if (!silentFired[i] && (int32_t)silent.cues[i].ms - leadOf(silent.cues[i]) <= t) {
+      silentFired[i] = true;
+      if (cueHandler) cueHandler(silent.cues[i].name);
+    }
 }
 
 void setPins(int bclk, int lrc, int din) {

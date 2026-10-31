@@ -8,7 +8,8 @@
 namespace smoke {
 
 void begin();
-void setConfig(bool on, const String &host, int cooldownS, int smallMs, int bigMs);  // persisted
+void setConfig(bool on, const String &host, int cooldownS, int smallMs, int bigMs, int leadMs);  // persisted
+int leadMs();  // how long the machine takes to start smoking
 // Ask for a puff (test: ignore the cooldown). Safe from any task: the
 // requests go out from service() in loop().
 void puff(bool big, bool test = false);

@@ -45,6 +45,11 @@ static void lightCue(const char *name) {
   else if (!strcmp(name, "snoep")) led2::candy();
 }
 
+// Smoke takes a moment to come out of the machine; press the button earlier.
+static int cueLead(const char *name) {
+  return !strcmp(name, "rook") || !strcmp(name, "veel_rook") ? smoke::leadMs() : 0;
+}
+
 // web/index.html, embedded at build time (board_build.embed_txtfiles).
 extern const char PAGE[] asm("_binary_web_index_html_start");
 
@@ -286,7 +291,8 @@ static void setupServer() {
   server.on("/smoke", [] {
     if (server.hasArg("host"))
       smoke::setConfig(server.arg("on") == "1", server.arg("host"), server.arg("cooldown").toInt(),
-                       server.arg("small").toFloat() * 1000, server.arg("big").toFloat() * 1000);
+                       server.arg("small").toFloat() * 1000, server.arg("big").toFloat() * 1000,
+                       server.hasArg("lead") ? server.arg("lead").toFloat() * 1000 : smoke::leadMs());
     // puff=small|big respects the cooldown; test=small|big doesn't.
     if (server.hasArg("puff")) smoke::puff(server.arg("puff") == "big");
     if (server.hasArg("test")) smoke::puff(server.arg("test") == "big", true);
@@ -400,7 +406,7 @@ void setup() {
   mic::begin();
   storage::begin();
   audio::begin();
-  audio::onCue(lightCue);
+  audio::onCue(lightCue, cueLead);
   setupWifi();
   audio::beginNetwork();
   mic::beginNetwork();

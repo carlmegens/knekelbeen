@@ -32,7 +32,7 @@ nogeen         | 4.08 ogen_flits, 11.18 spookgroen
 ouders         | 5.08 ogen_flits, 7.7 spookgroen
 psst           | 1.92 ogen_flits, 3.78 ogen_flits, 8.1 spookgroen
 rammel         | 1.94 ogen_flits, 4.04 ogen_flits, 4.98 ogen_flits, 5.78 ogen_flits, 8.24 spookgroen
-schrik         | 0 kaarsen_op, 0 ogen_flits
+schrik         | 0 kaarsen_op, 0 ogen_flits, 0 rook
 snoep          | 5.3 ogen_flits
 spinnen        | 1.66 spookgroen, 4.4 ogen_flits, 7.84 ogen_flits
 tanden         | 1.26 ogen_flits, 8.36 kaarsen_op

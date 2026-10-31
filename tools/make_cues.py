@@ -92,7 +92,7 @@ FX = {
     "fx_klokkenspel": (["spookgroen"], 1),
     "tikkendeklok": (["ogen_flits"], 20),
 }
-SKIP = re.compile(r"^(orgel$|fx_tiktak|fx_toontest|stem_|test_|opname|liedje_16k|denk_)")
+SKIP = re.compile(r"^(naam_|orgel$|fx_tiktak|fx_toontest|stem_|test_|opname|liedje_16k|denk_)")
 
 
 def load(path: Path) -> tuple[np.ndarray, int]:
