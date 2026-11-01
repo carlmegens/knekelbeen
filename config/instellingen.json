@@ -1,0 +1,130 @@
+{
+ "skull": {
+  "eyes": {
+   "on": true,
+   "color": "FF2600",
+   "bright": 100,
+   "mode": 0
+  },
+  "candles": {
+   "on": true,
+   "count": 5,
+   "order": "RGB",
+   "bright": 34,
+   "mode": 0,
+   "speed": 70,
+   "visit": 62,
+   "voice": true
+  },
+  "led2": {
+   "on": true,
+   "count": 12,
+   "color": "FFAE00",
+   "bright": 7,
+   "mode": 7,
+   "vcolor": "F27B00",
+   "vbright": 31,
+   "vmode": 0,
+   "fx": true,
+   "bcount": 12,
+   "bcolor": "FF6000",
+   "bbright": 44,
+   "bmode": 1,
+   "ccolor": "FF9D40",
+   "csecs": 15,
+   "pcount": 12,
+   "pcolor": "FF5000",
+   "pbright": 24,
+   "pmode": 7,
+   "pvcolor": "FF7000",
+   "pvbright": 55,
+   "pvmode": 3,
+   "pfx": true
+  },
+  "jaw": {
+   "on": true,
+   "soft": 12
+  },
+  "cal": {
+   "closed": 100,
+   "open": 135
+  },
+  "turn": {
+   "enabled": true,
+   "center": 135,
+   "range": 20,
+   "lively": true
+  },
+  "sync": {
+   "gate": 2000,
+   "sens": 100,
+   "lead": 200,
+   "vol": 100
+  },
+  "amps": {
+   "on": true,
+   "sleep": true,
+   "bass": 200,
+   "echoon": true,
+   "echo": 35,
+   "echoms": 170
+  },
+  "pir": {
+   "enabled": true,
+   "cooldown": 15
+  },
+  "visit": {
+   "hold": 60
+  },
+  "smoke": {
+   "on": true,
+   "host": "192.168.2.181",
+   "cooldown": 5,
+   "small": 500,
+   "big": 1000,
+   "lead": 500
+  }
+ },
+ "laptop": {
+  "lamps": {
+   "on": true,
+   "lamps": [
+    {
+     "entity": "light.buiten_voordeur",
+     "name": "Voordeur",
+     "on": true,
+     "fx": true,
+     "rest": {
+      "color": "#7a00ff",
+      "bright": 10
+     },
+     "visit": {
+      "color": "#ffd8a0",
+      "bright": 50
+     }
+    },
+    {
+     "entity": "light.garagedeur_ledstrip",
+     "name": "Garagedeur",
+     "on": true,
+     "fx": true,
+     "rest": {
+      "color": "#7a00ff",
+      "bright": 40
+     },
+     "visit": {
+      "color": "#ff6a00",
+      "bright": 80
+     }
+    }
+   ]
+  },
+  "ai": {
+   "pitch": 0.9,
+   "spooky": true,
+   "threshold": -57.0,
+   "voice": "Orus",
+   "mic": "skull"
+  }
+ }
+}

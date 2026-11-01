@@ -27,7 +27,8 @@ FILE = Path(__file__).resolve().parent.parent / "config" / "instellingen.json"
 SKULL_PAGES = ["eyes", "candles", "led2", "jaw", "cal", "turn", "sync", "amps",
                "pir", "visit", "smoke"]
 # Live state, not settings: left out of the file.
-LIVE = {"pos", "motion", "count", "ago", "result", "present", "fx", "fxn", "status"}
+LIVE = {"turn": {"pos"}, "pir": {"motion", "count", "ago"}, "smoke": {"ago", "result"},
+        "visit": {"present", "fx", "fxn"}}
 NAMES = {"eyes": "Ogen", "candles": "Kaarsen", "led2": "LED 2", "jaw": "Kaak",
          "turn": "Draaien", "amps": "Geluid", "pir": "Bewegingssensor", "smoke": "Rookmachine",
          "lamps": "Buitenlampen"}
@@ -47,7 +48,7 @@ def read_all() -> dict:
     out = {"skull": {}, "laptop": {}}
     for page in SKULL_PAGES:
         d = get(f"{SKULL}/{page}")
-        out["skull"][page] = {k: v for k, v in d.items() if k not in LIVE}
+        out["skull"][page] = {k: v for k, v in d.items() if k not in LIVE.get(page, ())}
     lamps = get(f"{LAPTOP}/api/lamps")
     lamps.pop("status", None)
     out["laptop"]["lamps"] = lamps
